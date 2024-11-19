@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
 import { Switch } from '../ui/switch';
 import * as XLSX from "xlsx"; 
@@ -32,6 +32,7 @@ const ContentForm = () => {
   const [ isPasswordShown, setIsPasswordShown ] = React.useState(false);
   const [ resultCode, setResultCode ] = React.useState(null);
   const [isSingleEmail, setIsSingleEmail] = React.useState<boolean>(false)
+  const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const { toast } = useToast()
   // console.log("log", isOther)
   const formSchema = z.object({
@@ -222,7 +223,12 @@ const convertAttachmentToArray = (attachments:any) => {
     formData.append("sender", data.sender as string);
     formData.append("reply_to", data.reply_to as string);
 
+    // Debugging form data
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ": " + pair[1]);
+    }
     try{
+      setIsLoading(true)
       const response = await axios.post("https://api.mailer.xnyder.com/send/multiple", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -268,6 +274,8 @@ const convertAttachmentToArray = (attachments:any) => {
       })
         
       }
+    }finally{
+      setIsLoading(false)
     }
   }
   return (
@@ -497,7 +505,7 @@ const convertAttachmentToArray = (attachments:any) => {
                     )}
                   />
 
-                <Button type="submit" className='bg-blue-600 w-full py-3 font-bold'>Send </Button>
+                <Button type="submit" className='bg-blue-600 w-full py-3 font-bold' disabled={isLoading}>{isLoading ? <span className='mx-auto'><Loader2 className='animate-spin'/></span>: "Send"} </Button>
               </form>
             </Form>
 
