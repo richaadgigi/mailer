@@ -22,18 +22,17 @@ import { Textarea } from '../ui/textarea';
 import { Switch } from '../ui/switch';
 import * as XLSX from "xlsx"; 
 import { parse } from "papaparse"; 
+import axios from "axios";
+import { useToast } from "@/hooks/use-toast"
 
- 
 const AcceptedTypes = ['text/csv', 'text/xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain']
-// const AcceptedTypes = ['text/plain']
-
-
 
 const ContentForm = () => {
   const [ resultLoaded, setResultLoaded ] = React.useState(false);
   const [ isPasswordShown, setIsPasswordShown ] = React.useState(false);
   const [ resultCode, setResultCode ] = React.useState(null);
   const [isSingleEmail, setIsSingleEmail] = React.useState<boolean>(false)
+  const { toast } = useToast()
   // console.log("log", isOther)
   const formSchema = z.object({
     host_type: z.string().min(2, {
@@ -51,7 +50,7 @@ const ContentForm = () => {
     }),
     emails: isSingleEmail ?
     typeof window !== "undefined" ?
-    z.instanceof(FileList, {message: "Required"}).refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).refine((files) => files?.[0].type === "text/plain", {message: "Only txt accepted"}).optional()
+    z.instanceof(FileList, {message: "Required"}).refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).refine((files) => AcceptedTypes.includes(files?.[0].type), {message: "Only csv, xlsx, txt accepted"}).optional()
     :
     z.any().refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).refine((files) => files?.[0].type === "text/plain", {message: "Only txt accepted"}).optional()
     :
@@ -105,58 +104,43 @@ const ContentForm = () => {
   const isOther = form.watch("host_type").toLocaleLowerCase() === "other"
   // console.log("isOther", isOther)
 
-  const handleEmailChange = async (e: React.ChangeEvent<HTMLInputElement>, isSingleEmail: boolean) => {
+  const handleCSVUpload = async (file: File) => {
+    const csvData = await new Promise<string[]>((resolve, reject) => {
+          parse(file, {
+            complete: (result) => {
+              const parsedEmails: any = result.data.flat(); // Flatten in case of nested arrays
+              resolve(parsedEmails.filter((email:string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))); // Filter valid emails
+            },
+            error: reject,
+          });
+        });
+      return csvData
     
-    if (isSingleEmail) {
-      // For single email (text input)
-      const email = e.target.value;
-      form.setValue("emails", email); // Add single email to form data
-    } else {
-      const files = e.target.files;
-      if (!files) return;
-      // For multiple emails (file input)
-      const file = files[0];
-      if (file) {
-        const fileExtension = file.name.split(".").pop()?.toLowerCase();
-        if (fileExtension === "csv") {
-          handleCSVUpload(file);
-        } else if (fileExtension === "xlsx") {
-           handleXLSXUpload(file);
-        }
-      }
-    }
   };
 
-  const handleCSVUpload = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const csvContent = e.target?.result as string;
-      parse(csvContent, {
-        complete: (result) => {
-          const emails = result.data.map((row:any) => row[0]); // Assuming emails are in the first column
-          // form.setValue("emails", JSON.stringify(emails)); // Convert array to string
-          return emails
-        },
-      });
-    };
-    reader.readAsText(file); // Use readAsText for CSV files
-  };
-
-  const handleXLSXUpload = (file: File) => {
+  const handleXLSXUpload = async (file: File) => {
     // Read Excel file and parse emails
+   let emailsArray: string[] = []
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const data = e.target?.result as string;
-      const workbook = XLSX.read(data, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const emails: string[] = XLSX.utils.sheet_to_json(sheet, { header: 1 }).map(
-        (row: any) => row[0] // Assuming emails are in the first column
-      );
-      // form.setValue("emails", JSON.stringify(emails));
-      return emails
-    };
-    reader.readAsArrayBuffer(file);
+    await new Promise<void>((resolve, reject) => {
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[firstSheetName];
+          const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as string[][];
+          emailsArray = rows.flat().filter((email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+
+    return emailsArray
   };
 
   const convertTextFileToArray = async (data: File) => {
@@ -170,53 +154,124 @@ const ContentForm = () => {
 
   }
 
-const convertAttachmentsToFilenameAndPath = (data:File) => {
-  const convertedData = Object.entries(data)
+
+const convertEmailsToArray = async (emails: FileList | string) => {
+  let emailsArray: string[] = [];
+    
+    if (emails instanceof FileList) {
+     const file = emails[0];
+     const fileExtension = file.name.split(".").pop()?.toLowerCase();
+    if (fileExtension === "csv") {
+      emailsArray = await handleCSVUpload(file);
+    } else if (fileExtension === "xlsx") {
+      emailsArray =  await handleXLSXUpload(file)
+    } else if (fileExtension === "txt"){
+      emailsArray = await convertTextFileToArray(emails[0]);
+    }
+    else {
+      alert("Unsupported file type. Please upload a CSV or XLSX or Txt file.");
+      return;
+    }
+  }
+  else if (typeof emails === "string") {
+    emailsArray = [emails];
+  }
+
+  if (emailsArray.length === 0) {
+    alert("No valid email addresses found.");
+    return;
+  }
+    return emailsArray
 
 }
- 
 
-  async function onSubmit(data: z.infer<typeof formSchema>) {
-    console.log("data", data)
+const convertAttachmentToArray = (attachments:any) => {
     let attachmentArray: { filename: string; path: File; }[] = [];
-    if (data.attachments) {
-      attachmentArray = Array.from(data.attachments).map((file: any) => ({
+    if (attachments) {
+      attachmentArray = Array.from(attachments).map((file: any) => ({
         filename: file.name,
         path: file
       }));
     }
-    console.log("attdata", attachmentArray)
-    let emailArray: string[] = [];
-    
-    if (data.emails instanceof FileList) {
-      emailArray = await convertTextFileToArray(data.emails[0]);
-    } else if (typeof data.emails === "string") {
-      emailArray = [data.emails];
-    }
+    return attachmentArray
+}
+ 
 
-    if (emailArray.length === 0) {
-      alert("No valid emails found. Please check your input.");
-      return;
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+
+    const  emailArray = await convertEmailsToArray(data.emails)
+    const  attachmentArray = convertAttachmentToArray(data.attachments)
+    if(!emailArray){
+      return
     }
+    console.log("email", emailArray)
+    console.log("att", attachmentArray)
+    
 
     const formData = new FormData();
     formData.append("host_type", data.host_type);
-    formData.append("smtp_host", data.smtp_host || "");
+    formData.append("smtp_host", data.smtp_host as string);
     formData.append("username", data.username);
     formData.append("password", data.password);
     formData.append("from_email", data.from_email);
     formData.append("emails", JSON.stringify(emailArray)); 
-    formData.append("subject", data.subject || "");
-    formData.append("text", data.text || "");
+    formData.append("subject", data.subject as string);
+    formData.append("text", data.text as string);
     formData.append("html", data.html);
-    formData.append("attachments", data.attachments?.[0] || "");
-    formData.append("sender", data.sender || "");
-    formData.append("reply_to", data.reply_to || "");
+    formData.append("attachments", JSON.stringify(attachmentArray));
+    formData.append("sender", data.sender as string);
+    formData.append("reply_to", data.reply_to as string);
 
-    console.log('formdata', formData)
+    try{
+      const response = await axios.post("https://api.mailer.xnyder.com/send/multiple", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "mailer-access-key": "d8b40bda-9193-4ac8-b7cf-82d2c09ed7c1",
+        },
+      });
+  
+      // Handle successful response
+      console.log("File uploaded successfully:", response.data);
+      toast({
+        description: "File uploaded successfully!",
+        variant: "success"
+    })
+
+  
+
+    }catch(error:any){
+      if (error.message === "Network Error") {
+        toast({
+          description: "Network error. Please check your internet connection and try again.",
+          variant: "destructive"
+      })
+        
+      } else if (error.response?.status === 400) {
+        toast({
+          description: "Bad Request. Please ensure all form fields are valid.",
+          variant: "destructive"
+      })
+    } else if (error.response?.status === 500) {
+        toast({
+          description: "Server error. Please try again later.",
+          variant: "destructive"
+      })
+    } else if (error.message) {
+        toast({
+          description: error.message,
+          variant: "destructive"
+      })
+    } else {
+        toast({
+          description: "An unexpected error occurred. Please try again.",
+          variant: "destructive"
+      })
+        
+      }
+    }
   }
   return (
-    <section className='flex gap-7 md:flex-nowrap flex-wrap px-12 pt-44 pb-24 md:flex-row flex-col-reverse'>
+    <section className='flex gap-7 md:flex-nowrap flex-wrap md:px-12 px-6 pt-44 pb-24 md:flex-row flex-col-reverse'>
         <div className=''>
             <div className='mb-7 w-fit'>
                 <Link href="" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=467244&theme=neutral" alt="Mailer - Effortless&#0032;mailing&#0032;service&#0044;&#0032;Instant&#0032;Results | Product Hunt" style={{width: '250px', height: '54px'}} width="250" height="54" /></Link>
@@ -324,7 +379,7 @@ const convertAttachmentsToFilenameAndPath = (data:File) => {
                           <FormControl>
                             {isSingleEmail ?
                             <div>
-                            <Input type={'file'} ref={field.ref}  accept=".txt" onChange={(e) => field.onChange(e.target.files)} className={`${form.control._formState.errors.emails && "border-b-red-500"} file:bg-violet-50 file:text-violet-700 rounded-md hover:file:bg-violet-100 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow pt-4 pb-8`}/>
+                            <Input type={'file'} ref={field.ref}  accept=".xlsx, .csv, .txt" onChange={(e) => field.onChange(e.target.files)} className={`${form.control._formState.errors.emails && "border-b-red-500"} file:bg-violet-50 file:text-violet-700 rounded-md hover:file:bg-violet-100 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow pt-4 pb-8`}/>
                             <FormDescription>
                               Recipients email addresses should be in txt file.
                             </FormDescription>
