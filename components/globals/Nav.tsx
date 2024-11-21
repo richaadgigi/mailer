@@ -7,9 +7,11 @@ import { Coffee } from 'lucide-react';
 const Nav = () => {
   return (
     <nav className='flex justify-between gap-3 md:flex-row flex-col py-6 border-b-2 border-color bg-white md:px-12 px-6 fixed w-full z-20'>
-      <Link href={`/`} title='Mailer Logo'>
-        <h2 className='text-2xl font-bold text-blue-700' >Mailer<sup className='pl-1 text-xs font-normal text-muted-foreground'>by xnyder</sup></h2>
-      </Link>
+      <div className='md:border-0 md:py-0 border-b-2 border-color py-5'>
+        <Link href={`/`} title='Mailer Logo'>
+          <h2 className='text-2xl font-bold text-blue-700' >Mailer<sup className='pl-1 text-xs font-normal text-muted-foreground'>by xnyder</sup></h2>
+        </Link>
+      </div>
       <ul className='flex gap-4'>
         <Link href={'https://instagram.com/xnyderhq'} title='Instagram' className='flex items-center justify-center w-10 h-10 bg-blue-700 text-white rounded-full'>
             <LogoInstagram size={18.4} />

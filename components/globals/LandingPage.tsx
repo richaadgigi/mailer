@@ -6,7 +6,7 @@ import Image from 'next/image'
 
 const LandingPage = () => {
   return (
-    <section className='flex md:flex-nowrap flex-wrap gap-4 max-w-max md:px-12 px-6 pt-36 '>
+    <section className='flex md:flex-nowrap flex-wrap gap-4 max-w-max md:px-12 px-6 md:pt-36 pt-48 '>
         <div className='md:basis-1/2'>
             <div className='mb-7 w-fit'>
                 <Link href="" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=467244&theme=neutral" alt="Mailer - Effortless&#0032;mailing&#0032;service&#0044;&#0032;Instant&#0032;Results | Product Hunt" style={{width: '250px', height: '54px'}} width="250" height="54" /></Link>
