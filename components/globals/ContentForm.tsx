@@ -61,9 +61,7 @@ const ContentForm = () => {
     subject: z.string().min(2, {
       message: "Subject must be at least 2 characters.",
     }).optional(),
-    text: z.string().min(2, {
-      message: "Text must be at least 2 characters.",
-    }).optional(),
+    text: z.string().optional(),
     html: z.string().min(2, {
       message: "Html must be at least 2 characters.",
     }),
@@ -96,6 +94,7 @@ const ContentForm = () => {
       emails: undefined,
       subject: "",
       html: "",
+      text: "",
       attachments: undefined,
       sender: "",
       reply_to: ""
