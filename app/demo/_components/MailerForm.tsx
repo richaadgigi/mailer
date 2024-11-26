@@ -49,11 +49,11 @@ const MailerForm = () => {
         }),
         emails: isSingleEmail ?
         typeof window !== "undefined" ?
-        z.instanceof(FileList, {message: "Required"}).refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).refine((files) => AcceptedTypes.includes(files?.[0].type), {message: "Only csv, xlsx, txt accepted"}).optional()
+        z.instanceof(FileList, {message: ""}).refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).refine((files) => AcceptedTypes.includes(files?.[0].type), {message: "Only csv, xlsx, txt accepted"}).optional()
         :
         z.any().refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).refine((files) => files?.[0].type === "text/plain", {message: "Only txt accepted"}).optional()
         :
-        z.string().email().min(2, {
+        z.string({required_error: ""}).email().min(2, {
           message: "Email must be at least 2 characters.",
         }),
         subject: z.string().min(2, {
@@ -64,7 +64,7 @@ const MailerForm = () => {
           message: "Html must be at least 2 characters.",
         }),
         attachments: typeof window !== "undefined" ?
-        z.instanceof(FileList, {message: "Required"}).refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).optional()
+        z.instanceof(FileList, {message: ""}).refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).optional()
         :
         z.any().refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).optional()
         ,
