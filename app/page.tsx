@@ -6,7 +6,7 @@ import LandingPage from "@/components/globals/LandingPage";
 export default function Home() {
   return (
     <>
-      <Nav/>
+     
       <main>
         
         <LandingPage/>

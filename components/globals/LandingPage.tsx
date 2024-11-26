@@ -14,10 +14,10 @@ const LandingPage = () => {
             <Link target='_blank' href={'https://xnyder.com'} className='bg-[#eaebfb] px-4 py-2 text-blue-600 font-semibold text-sm'>A tool by Xnyder</Link>
             <h1 className='md:text-5xl py-4 text-4xl'>The <span className='text-blue-600'>Mailing</span> service<span className='text-blue-600'> designed</span> for you.</h1>
             <p className='my-2 text-sm'><span className='opacity-60'>Easily send mails to </span> <span className='text-blue-600'>Clients</span> <span className='opacity-60'>right here and now.  Tap the button and let the magic unfold! ✨</span></p>
-            <p></p>
-            <div className='md:mx-0 mx-auto border w-fit'>
+            
+            <Link href={`/demo`} className='md:mx-0 mx-auto border w-fit'>
                 <Button className='bg-blue-600 px-20 py-6 transition-all duration-500'>Try it out <Send/></Button>
-            </div>
+            </Link>
         </div>
         <div className='md:basis-1/2'>
             <Image src={`/mail.png`} alt="Mail" width={500} height={200}/>
