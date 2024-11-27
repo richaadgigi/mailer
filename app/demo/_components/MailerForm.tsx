@@ -150,7 +150,7 @@ const MailerForm = () => {
                 
             } else if (error.response?.status === 400) {
                 toast({
-                description: "Bad Request. Please ensure all form fields are valid.",
+                description: error.response.data.message,
                 variant: "destructive"
             })
             }else if (error.response?.status === 422) {
