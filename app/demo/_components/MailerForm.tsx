@@ -105,6 +105,22 @@ const MailerForm = () => {
             return
             }
 
+            // Prepare JSON payload
+            const payload = {
+              host_type: data.host_type.toLocaleUpperCase(),
+              smtp_host: data.smtp_host || undefined,
+              username: data.username,
+              password: data.password,
+              from_email: data.from_email,
+              emails: emailArray, 
+              subject: data.subject || undefined,
+              text: data.text || undefined,
+              html: data.html,
+              attachments: attachmentArray.length > 0 ? attachmentArray : undefined, 
+              sender: data.sender || undefined,
+              reply_to: data.reply_to || undefined,
+            };
+
             const formData = new FormData();
             formData.append("host_type", data.host_type);
             formData.append("smtp_host", data.smtp_host as string);
@@ -123,11 +139,13 @@ const MailerForm = () => {
             for (let pair of formData.entries()) {
             console.log(pair[0] + ": " + pair[1]);
             }
+
+            console.log("payload", payload)
             try{
             setIsLoading(true)
-            const response = await axios.post("https://api.mailer.xnyder.com/send/multiple", formData, {
+            const response = await axios.post("https://api.mailer.xnyder.com/send/multiple", payload, {
                 headers: {
-                "Content-Type": "multipart/form-data",
+                "Content-Type": "application/json",
                 "mailer-access-key": "d8b40bda-9193-4ac8-b7cf-82d2c09ed7c1",
                 },
             });
@@ -154,6 +172,11 @@ const MailerForm = () => {
                 description: "Bad Request. Please ensure all form fields are valid.",
                 variant: "destructive"
             })
+            }else if (error.response?.status === 422) {
+                toast({
+                description: error.response.data.data[0].msg,
+                variant: "destructive"
+            })
             } else if (error.response?.status === 500) {
                 toast({
                 description: "Server error. Please try again later.",
@@ -171,6 +194,7 @@ const MailerForm = () => {
             })
                 
             }
+            console.log("error", error)
             }finally{
             setIsLoading(false)
             }
