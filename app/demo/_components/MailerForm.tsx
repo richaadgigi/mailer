@@ -121,25 +121,6 @@ const MailerForm = () => {
               reply_to: data.reply_to || undefined,
             };
 
-            const formData = new FormData();
-            formData.append("host_type", data.host_type);
-            formData.append("smtp_host", data.smtp_host as string);
-            formData.append("username", data.username);
-            formData.append("password", data.password);
-            formData.append("from_email", data.from_email);
-            formData.append("emails", JSON.stringify(emailArray)); 
-            formData.append("subject", data.subject as string);
-            formData.append("text", data.text as string);
-            formData.append("html", data.html);
-            formData.append("attachments", JSON.stringify(attachmentArray));
-            formData.append("sender", data.sender as string);
-            formData.append("reply_to", data.reply_to as string);
-
-            // Debugging form data
-            for (let pair of formData.entries()) {
-            console.log(pair[0] + ": " + pair[1]);
-            }
-
             console.log("payload", payload)
             try{
             setIsLoading(true)
