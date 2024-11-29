@@ -1,5 +1,5 @@
 "use client"
-import React, { FormEvent } from 'react'
+import React from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -38,10 +38,11 @@ import { z } from "zod"
 import { ChevronDown, Eye, EyeOff, Info, Loader2, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-
+import { StepType, TourProvider, useTour } from '@reactour/tour'
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast"
-import { convertAttachmentToArray, convertEmailsToArray } from '@/lib/global'
+import { convertAttachmentToArray, convertEmailsToArray, getSmtpHost } from '@/lib/global'
+import AppTour from '@/hooks/Tour'
 
 const AcceptedTypes = ['text/csv', 'text/xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain']
 
@@ -51,7 +52,76 @@ const MailerForm = () => {
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const { toast } = useToast()
   const [acceptedEmails, setAcceptedEmails] = React.useState<Array<string> | undefined>([])
+  const [isTourOpen, setIsTourOpen] = React.useState(false);
 
+  const steps = [
+    {
+      id: 'email-step',
+      title: 'Email Input',
+      text: 'Which email are you sending from?',
+      attachTo: { element: '#from-email', on: "bottom" },
+    },
+    {
+      id: 'email-step',
+      title: 'Emails',
+      text: 'Emails that will receive the message. You can add multiple email will a commma.',
+      attachTo: { element: '#emails', on: "bottom" },
+    },
+    {
+      id: 'email-icon-step',
+      title: 'Toggle',
+      text: 'Switch and insert a - .txt, .csv, .xlsx - file. We filter the emails in it.',
+      attachTo: { element: '#emails-toggle', on: "bottom" },
+    },
+    {
+      id: 'subject-step',
+      title: 'Subject Input',
+      text: 'The heading of your mail.',
+      attachTo: { element: '#subject', on: "bottom" },
+    },
+    {
+      id: 'html-step',
+      title: 'Text content',
+      text: 'Type your content here...',
+      attachTo: { element: '#html', on: "top" },
+    },
+    {
+      id: 'username-step',
+      title: 'Username',
+      text: 'The username you use for sign in.',
+      attachTo: { element: '#username', on: "top" },
+    },
+    {
+      id: 'password-step',
+      title: 'Password',
+      text: 'Password needed for sign in',
+      attachTo: { element: '#password', on: "top" },
+    },
+    {
+      id: 'host-step',
+      title: 'Host type',
+      text: 'Choose my server if you prefer to use your server.',
+      attachTo: { element: '#host', on: "top" },
+    },
+    {
+      id: 'sender-step',
+      title: 'Sender',
+      text: 'The name that will appear as the sender.',
+      attachTo: { element: '#sender', on: "top" },
+    },
+    {
+      id: 'reply-step',
+      title: 'Reply',
+      text: 'An accessible email that is easily reached.',
+      attachTo: { element: '#reply_to', on: "top" },
+    },
+    {
+      id: 'attachment-step',
+      title: 'Documents',
+      text: 'Documents can be attached here.',
+      attachTo: { element: '#attachments', on: "top" },
+    },
+  ];
 
 
 
@@ -75,7 +145,7 @@ const MailerForm = () => {
         :
         z.any().refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).refine((files) => files?.[0].type === "text/plain", {message: "Only txt accepted"}).optional()
         :
-        z.string({required_error: ""}).email().min(2, {
+        z.string({required_error: ""}).min(2, {
           message: "Email must be at least 2 characters.",
         }),
         subject: z.string().min(2, {
@@ -121,11 +191,6 @@ const MailerForm = () => {
             },
           })
 
-          const getSmtpHost = (email: string) => {
-            const smtphost = email.split('@')[1]
-            return smtphost
-          }
-
           const handleEmailOnchangeArrayFile = async (emailFile: any) => {
             const  emailArray = await convertEmailsToArray(emailFile)
             setAcceptedEmails(emailArray)
@@ -137,14 +202,16 @@ const MailerForm = () => {
             setAcceptedEmails(filteredEmailArray)
           }
 
+          const removeEmail = (email:string) => {
+            const filteredEmailArray = acceptedEmails?.filter((prev) => prev !== email)
+            setAcceptedEmails(filteredEmailArray)
+          }
+
 
         
           async function onSubmit(data: z.infer<typeof formSchema>) {
-            const  emailArray = await convertEmailsToArray(data.emails)
             const  attachmentArray = convertAttachmentToArray(data.attachments)
-            if(!emailArray){
-            return
-            }
+            
 
             // Prepare JSON payload
             const payload = {
@@ -153,7 +220,7 @@ const MailerForm = () => {
               username: data.username,
               password: data.password,
               from_email: data.from_email,
-              emails: emailArray, 
+              emails: acceptedEmails, 
               subject: data.subject || undefined,
               text: data.text || undefined,
               html: data.html,
@@ -225,23 +292,26 @@ const MailerForm = () => {
     <section className='relative'>
          <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-6 flex md:flex-nowrap flex-wrap md:pt-0 pt-24">
+                <span onClick={() => setIsTourOpen(true)} className='mt-24 border bg-white shadow w-fit h-fit py-2 px-4 ml-2 cursor-pointer sticky top-24'>Take Tour</span>
+
                 <div className='bg-white mt-24 py-5 md:max-w-[36rem] w-full mx-auto p-4 md:rounded-2xl md:!sticky h-fit top-28 md:flex-1'>
+                  
                     <FormField
                         control={form.control}
                         name="from_email"
                         render={({ field }) => (
-                        <FormItem className={`${form.control._formState.errors.from_email && "border-b-red-500 !border-b-2"} border-b w-full flex items-center gap-x-1`}>
+                        <FormItem id='from-email' className={`${form.control._formState.errors.from_email && "border-b-red-500 !border-b-2"} border-b w-full flex items-center gap-x-1`}>
                             <FormLabel className="text-muted-foreground">
                                 From:
                             </FormLabel>
                             <FormControl>
-                            <Input type='email' placeholder="info@server.com" {...field} className={` ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0 rounded-none pt-0 pb-2`}/>
+                            <Input type='email' placeholder="info@server.com"  {...field} className={` ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0 rounded-none pt-0 pb-2`}/>
                             </FormControl>
                         </FormItem>
                         )}
                     />
                   <div className='relative'>
-                    <div className='flex justify-center w-fit items-center gap-2 pb-1 absolute right-4 top-4'>
+                    <div className='flex justify-center w-fit items-center gap-2 pb-1 absolute right-4 top-4' id='emails-toggle'>
                         <Switch checked={isSingleEmail}  onCheckedChange={()=>setIsSingleEmail(!isSingleEmail)}/>
                         <HoverCard>
                           <HoverCardTrigger><Info color='red' className='cursor-pointer'/></HoverCardTrigger>
@@ -255,7 +325,7 @@ const MailerForm = () => {
                       control={form.control}
                       name="emails"
                       render={({ field }) => (
-                        <FormItem className={`${form.control._formState.errors.emails && "border-b-red-500 !border-b-2"} border-b w-full flex gap-x-1 flex-col py-2`}>
+                        <FormItem id='emails' className={`${form.control._formState.errors.emails && "border-b-red-500 !border-b-2"} border-b w-full flex gap-x-1 flex-col py-2`}>
                           <div className='flex items-center gap-x-1'>
                             <FormLabel className="text-muted-foreground">
                               {isSingleEmail ? 'Recipients:' : 'Recipient:'} 
@@ -267,7 +337,7 @@ const MailerForm = () => {
                                 </div>
                                 :
                                 <div className='w-full pr-20'>
-                                <Input type="email" placeholder="receiver@gmail.com" ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailOnchangeArrayText(e.target.value)}} className={`ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
+                                <Input type="text" placeholder="receiver@gmail.com" ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailOnchangeArrayText(e.target.value)}} className={`ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
                                 </div>
                                 }
                               </FormControl>
@@ -293,7 +363,7 @@ const MailerForm = () => {
                                       {acceptedEmails && acceptedEmails.map((email, index) => (
                                         <span key={`${email}-${index}`} className='flex justify-between text-sm text-black'>
                                           <span>{email}</span>
-                                          <X color='red'/>
+                                          <X color='red' onClick={()=>removeEmail(email)} className='cursor-pointer'/>
                                         </span>
                                       ))}
                                     </DialogDescription>
@@ -301,7 +371,7 @@ const MailerForm = () => {
                                 </DialogContent>
                               </Dialog>
                             : acceptedEmails && acceptedEmails.map((email, index) => (
-                              <li key={`${email}-${index}`} className='flex border rounded-2xl py-1 px-2 w-fit items-center'>
+                              <li key={`${email}-${index}`} className='flex border rounded-2xl py-1 px-2 w-fit items-center mb-1'>
                                 <span>{email}</span>
                                 </li>
                             ))}
@@ -319,7 +389,7 @@ const MailerForm = () => {
                     control={form.control}
                     name="subject"
                     render={({ field }) => (
-                      <FormItem className={`${form.control._formState.errors.subject && "border-b-red-500 !border-b-2"} border-b w-full flex items-center gap-x-1`}>
+                      <FormItem id='subject' className={`${form.control._formState.errors.subject && "border-b-red-500 !border-b-2"} border-b w-full flex items-center gap-x-1`}>
                         <FormLabel className="text-muted-foreground">
                             Subject:
                         </FormLabel>
@@ -333,7 +403,7 @@ const MailerForm = () => {
                     control={form.control}
                     name="html"
                     render={({ field }) => (
-                      <FormItem className='w-full'>
+                      <FormItem id='html' className='w-full'>
                         <FormControl>
                           <Textarea placeholder="Type here..." {...field} rows={12} className={`${form.control._formState.errors.html && "border-b-red-500 !border-b-2"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-b rounded-none mt-4 px-2`}/>
                         </FormControl>
@@ -352,9 +422,9 @@ const MailerForm = () => {
                         control={form.control}
                         name="username"
                         render={({ field }) => (
-                        <FormItem className='w-full'>
+                        <FormItem  className='w-full'>
                             <FormControl>
-                            <Input placeholder="Username" {...field} className={`${form.control._formState.errors.username && "border-b-red-500"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6`}/>
+                            <Input id='username' placeholder="Username" {...field} className={`${form.control._formState.errors.username && "border-b-red-500"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6`}/>
                             </FormControl>
                             <FormDescription>
                             The username for authentication.
@@ -368,9 +438,7 @@ const MailerForm = () => {
                     render={({ field }) => (
                       <FormItem className='w-full relative'>
                         <FormControl>
-                          {/* <div className='pr-12'> */}
-                            <Input type={ isPasswordShown ? 'text' : 'password'} placeholder="Password" {...field} className={`${form.control._formState.errors.password && "border-b-red-500"} pr-12 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6`}/>
-                          {/* </div> */}
+                            <Input id='password' type={ isPasswordShown ? 'text' : 'password'} placeholder="Password" {...field} className={`${form.control._formState.errors.password && "border-b-red-500"} pr-12 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6`}/>
                         </FormControl>
                         <div className='absolute top-2 right-4 w-fit cursor-pointer'>
                             {isPasswordShown ?
@@ -393,7 +461,7 @@ const MailerForm = () => {
                       <FormItem className='w-full'>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger className={`${form.control._formState.errors.host_type && "border-b-red-500"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6 text-muted-foreground`}>
+                          <SelectTrigger id='host' className={`${form.control._formState.errors.host_type && "border-b-red-500"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6 text-muted-foreground`}>
                             <SelectValue placeholder="Send message with?" />
                           </SelectTrigger>
                         </FormControl>
@@ -417,7 +485,7 @@ const MailerForm = () => {
                     render={({ field }) => (
                       <FormItem className='w-full'>
                         <FormControl>
-                          <Input type='text' placeholder="Sender of the email" {...field} className={`${form.control._formState.errors.sender && "border-b-red-500"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6`}/>
+                          <Input id='sender' type='text' placeholder="Sender of the email" {...field} className={`${form.control._formState.errors.sender && "border-b-red-500"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6`}/>
                         </FormControl>
                         <FormDescription>
                           The sender of the email.
@@ -432,7 +500,7 @@ const MailerForm = () => {
                     render={({ field }) => (
                       <FormItem className='w-full relative'>
                         <FormControl>
-                          <Input  type={'email'} placeholder="Email address replies can be sent." {...field} className={`${form.control._formState.errors.reply_to && "border-b-red-500"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6`}/>
+                          <Input id='reply_to' type={'email'} placeholder="Email address replies can be sent." {...field} className={`${form.control._formState.errors.reply_to && "border-b-red-500"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6`}/>
                         </FormControl>
                         <FormDescription>
                           The email address to which replies should be sent.
@@ -447,7 +515,7 @@ const MailerForm = () => {
                     render={({ field }) => (
                       <FormItem className='w-full relative'>
                         <FormControl>
-                          <Input type={'file'} ref={field.ref}  onChange={(e) => field.onChange(e.target.files)} className={`${form.control._formState.errors.attachments && "border-b-red-500"} file:bg-violet-50 file:text-violet-700 rounded-md hover:file:bg-violet-100 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow pt-4 pb-8`} multiple={true}/>
+                          <Input id='attachments' type={'file'} ref={field.ref}  onChange={(e) => field.onChange(e.target.files)} className={`${form.control._formState.errors.attachments && "border-b-red-500"} file:bg-violet-50 file:text-violet-700 rounded-md hover:file:bg-violet-100 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow pt-4 pb-8`} multiple={true}/>
                         </FormControl>
                         <FormDescription>
                             Attachments 
@@ -462,10 +530,8 @@ const MailerForm = () => {
 
                 </div>
               </form>
-            </Form>
-
-
-      
+          </Form>
+      <AppTour steps={steps} isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
     </section>
   )
 }

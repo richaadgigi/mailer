@@ -40,7 +40,7 @@ export   const handleXLSXUpload = async (file: File) => {
     return emailsArray
   };
 
-export   const convertTextFileToArray = async (data: File) => {
+export const convertTextFileToArray = async (data: File) => {
         const fileContent = await data.text(); // For text file
         const fileArray = fileContent
           .split(/\r?\n/) // Split by new lines
@@ -91,5 +91,10 @@ export const convertAttachmentToArray = (attachments:any) => {
       }));
     }
     return attachmentArray
+}
+
+export const getSmtpHost = (email: string) => {
+  const smtphost = email.split('@')[1]
+  return smtphost
 }
  

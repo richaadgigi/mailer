@@ -5,7 +5,6 @@ const DemoPage = () => {
   return (
     <div>
         <MailerForm/>
-      
     </div>
   )
 }
