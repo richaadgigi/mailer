@@ -147,7 +147,7 @@ const MailerForm = () => {
         :
         z.string({required_error: ""}).min(2, {
           message: "Email must be at least 2 characters.",
-        }),
+        }).refine((value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.split(/[\s,]+/)[0]), {message: "No valid email added."}),
         subject: z.string().min(2, {
           message: "Subject must be at least 2 characters.",
         }).optional(),
@@ -216,7 +216,7 @@ const MailerForm = () => {
             // Prepare JSON payload
             const payload = {
               host_type: data.host_type.toLocaleUpperCase(),
-              smtp_host: data.host_type === "OTHER" ? getSmtpHost(data.from_email) :  data.host_type === "GOOGLE" ? "GOOGLE" : undefined,
+              smtp_host: data.host_type === "OTHER" ? getSmtpHost(data.from_email) : undefined,
               username: data.username,
               password: data.password,
               from_email: data.from_email,
