@@ -126,9 +126,15 @@ const MailerForm = () => {
             return smtphost
           }
 
-          const handleEmailOnchangeArray = async (emailFile: any) => {
+          const handleEmailOnchangeArrayFile = async (emailFile: any) => {
             const  emailArray = await convertEmailsToArray(emailFile)
             setAcceptedEmails(emailArray)
+          }
+
+          const handleEmailOnchangeArrayText = async (email: any) => {
+            const  emailArray = email.split(/[\s,]+/)
+            const filteredEmailArray = emailArray.filter((email:any) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+            setAcceptedEmails(filteredEmailArray)
           }
 
 
@@ -240,7 +246,7 @@ const MailerForm = () => {
                         <HoverCard>
                           <HoverCardTrigger><Info color='red' className='cursor-pointer'/></HoverCardTrigger>
                           <HoverCardContent>
-                            Simply add your emails in a file and watch us filter them.
+                            You can also separate multiple emails with a comma, else simply add a file.
                           </HoverCardContent>
                         </HoverCard>
 
@@ -257,11 +263,11 @@ const MailerForm = () => {
                               <FormControl>
                                 {isSingleEmail ?
                                 <div className='w-full pr-20'>
-                                <Input type={'file'} ref={field.ref} accept='.csv, .xlsx, .txt'  onChange={(e) => {field.onChange(e.target.files), handleEmailOnchangeArray(e.target.files)}} className={`file:bg-violet-50 file:text-violet-700 rounded-md hover:file:bg-violet-100 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-none bg-white shadow-none`}/>
+                                <Input type={'file'} ref={field.ref} accept='.csv, .xlsx, .txt'  onChange={(e) => {field.onChange(e.target.files), handleEmailOnchangeArrayFile(e.target.files)}} className={`file:bg-violet-50 file:text-violet-700 rounded-md hover:file:bg-violet-100 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-none bg-white shadow-none`}/>
                                 </div>
                                 :
                                 <div className='w-full pr-20'>
-                                <Input type="email" placeholder="receiver@gmail.com" ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailOnchangeArray(e.target.value)}} className={`ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
+                                <Input type="email" placeholder="receiver@gmail.com" ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailOnchangeArrayText(e.target.value)}} className={`ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
                                 </div>
                                 }
                               </FormControl>
