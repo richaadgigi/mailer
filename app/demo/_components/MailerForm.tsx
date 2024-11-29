@@ -10,11 +10,24 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card"
+ 
 import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Info, Loader2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 
@@ -70,15 +83,16 @@ const MailerForm = () => {
         ,
         sender: z.string().optional(),
         reply_to: z.string().optional().refine((value) =>  !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value), {message: "Reply-to must be a valid email address."}),
-      }).superRefine((data, ctx) => {
-        if (data.host_type.toLocaleLowerCase() === "other" && !data.smtp_host?.trim()) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["smtp_host"], 
-            message: "Smtp host is required when host type is 'other'",
-          })
-        }
-        })
+      })
+      // .superRefine((data, ctx) => {
+      //   if (data.host_type.toLocaleLowerCase() === "other" && !data.smtp_host?.trim()) {
+      //     ctx.addIssue({
+      //       code: z.ZodIssueCode.custom,
+      //       path: ["smtp_host"], 
+      //       message: "Smtp host is required when host type is 'other'",
+      //     })
+      //   }
+      //   })
 
         const form = useForm<z.infer<typeof formSchema>>({
             resolver: zodResolver(formSchema),
@@ -97,6 +111,12 @@ const MailerForm = () => {
               reply_to: ""
             },
           })
+
+          const getSmtpHost = (email: string) => {
+            const smtphost = email.split('@')[1]
+            return smtphost
+          }
+
         
           async function onSubmit(data: z.infer<typeof formSchema>) {
             const  emailArray = await convertEmailsToArray(data.emails)
@@ -108,7 +128,7 @@ const MailerForm = () => {
             // Prepare JSON payload
             const payload = {
               host_type: data.host_type.toLocaleUpperCase(),
-              smtp_host: data.smtp_host || undefined,
+              smtp_host: data.host_type === "OTHER" ? getSmtpHost(data.from_email) :  data.host_type === "GOOGLE" ? "GOOGLE" : undefined,
               username: data.username,
               password: data.password,
               from_email: data.from_email,
@@ -200,28 +220,38 @@ const MailerForm = () => {
                         )}
                     />
                   <div className='relative'>
-                    <div className='flex justify-center items-center gap-2 pb-1 absolute right-4 top-4'>
+                    <div className='flex justify-center w-fit items-center gap-2 pb-1 absolute right-4 top-4'>
                         <Switch checked={isSingleEmail}  onCheckedChange={()=>setIsSingleEmail(!isSingleEmail)}/>
+                        <HoverCard>
+                          <HoverCardTrigger><Info color='red' className='cursor-pointer'/></HoverCardTrigger>
+                          <HoverCardContent>
+                            Simply add your emails in a file and watch us filter them.
+                          </HoverCardContent>
+                        </HoverCard>
+
                     </div>
                     <FormField
                       control={form.control}
                       name="emails"
                       render={({ field }) => (
-                        <FormItem className={`${form.control._formState.errors.emails && "border-b-red-500 !border-b-2"} border-b w-full flex items-center gap-x-1`}>
-                        <FormLabel className="text-muted-foreground">
-                           {isSingleEmail ? 'Recipients:' : 'Recipient:'} 
-                        </FormLabel>
-                          <FormControl>
-                            {isSingleEmail ?
-                            <div>
-                            <Input type={'file'} ref={field.ref}  accept=".xlsx, .csv, .txt" onChange={(e) => field.onChange(e.target.files)} className={`file:bg-violet-50 file:text-violet-700 rounded-md hover:file:bg-violet-100 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-none bg-white shadow-none`}/>
-                            </div>
-                            :
-                            <div>
-                            <Input type="email" placeholder="receiver@gmail.com" ref={field.ref} onChange={(e) => field.onChange(e.target.value)} className={`ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0 rounded-none pt-0 pb-2`}/>
-                            </div>
-                            }
-                          </FormControl>
+                        <FormItem className={`${form.control._formState.errors.emails && "border-b-red-500 !border-b-2"} border-b w-full flex gap-x-1 flex-col py-2`}>
+                          <div className='flex items-center gap-x-1'>
+                            <FormLabel className="text-muted-foreground">
+                              {isSingleEmail ? 'Recipients:' : 'Recipient:'} 
+                            </FormLabel>
+                              <FormControl>
+                                {isSingleEmail ?
+                                <div className='w-full pr-20'>
+                                <Input type={'file'} ref={field.ref} accept='.csv, .xlsx, .txt'  onChange={(e) => field.onChange(e.target.files)} className={`file:bg-violet-50 file:text-violet-700 rounded-md hover:file:bg-violet-100 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-none bg-white shadow-none`}/>
+                                </div>
+                                :
+                                <div className='w-full pr-20'>
+                                <Input type="email" placeholder="receiver@gmail.com" ref={field.ref} onChange={(e) => field.onChange(e.target.value)} className={`ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
+                                </div>
+                                }
+                              </FormControl>
+
+                          </div>
                           <FormMessage/>
                         </FormItem>
                       )}
@@ -260,7 +290,7 @@ const MailerForm = () => {
 
 
                 </div>
-                <div className='md:right-0 !py-20 px-3 md:!w-80 w-full bg-white space-y-5'>
+                <div className='md:right-0 !pt-20 px-3 md:!w-80 w-full bg-white space-y-5'>
                     <h2 className='text-lg pb-1 font-bold'>Configuration</h2>
                     <FormField
                         control={form.control}
@@ -282,7 +312,9 @@ const MailerForm = () => {
                     render={({ field }) => (
                       <FormItem className='w-full relative'>
                         <FormControl>
-                          <Input type={ isPasswordShown ? 'text' : 'password'} placeholder="Password" {...field} className={`${form.control._formState.errors.password && "border-b-red-500"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6`}/>
+                          {/* <div className='pr-12'> */}
+                            <Input type={ isPasswordShown ? 'text' : 'password'} placeholder="Password" {...field} className={`${form.control._formState.errors.password && "border-b-red-500"} pr-12 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6`}/>
+                          {/* </div> */}
                         </FormControl>
                         <div className='absolute top-2 right-4 w-fit cursor-pointer'>
                             {isPasswordShown ?
@@ -303,30 +335,24 @@ const MailerForm = () => {
                     name="host_type"
                     render={({ field }) => (
                       <FormItem className='w-full'>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <Input placeholder="Host type" {...field} className={`${form.control._formState.errors.host_type && "border-b-red-500"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6`}/>
+                          <SelectTrigger className={`${form.control._formState.errors.host_type && "border-b-red-500"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6 text-muted-foreground`}>
+                            <SelectValue placeholder="Send message with?" />
+                          </SelectTrigger>
                         </FormControl>
+                        <SelectContent>
+                          <SelectItem value="GOOGLE">Google</SelectItem>
+                          <SelectItem value="OTHER">My server</SelectItem>
+                        </SelectContent>
+                      </Select>
                         <FormDescription>
                             The type of host.
                         </FormDescription>
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="smtp_host"
-                    render={({ field }) => (
-                      <FormItem className='w-full'>
-                        <FormControl>
-                          <Input placeholder="SMTP Host" {...field} className={`${form.control._formState.errors.smtp_host && "border-b-red-500"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6`}/>
-                        </FormControl>
-                        <FormDescription>
-                          The SMTP host, this is needed if the host_type is equal to OTHER.
-                        </FormDescription>
-                        <FormMessage/>
-                      </FormItem>
-                    )}
-                  />
+                  
                 <hr className='h-[0.1rem] my-2' color='black'/>
                 <h3 className='text-center '>Additional Options</h3>
                 <FormField
