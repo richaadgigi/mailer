@@ -64,7 +64,7 @@ const MailerForm = () => {
     {
       id: 'email-step',
       title: 'Emails',
-      text: 'Emails that will receive the message. You can add multiple email will a commma.',
+      text: 'Emails that will receive the message. You can add multiple email will a comma.',
       attachTo: { element: '#emails', on: "bottom" },
     },
     {

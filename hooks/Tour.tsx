@@ -84,7 +84,7 @@ const AppTour: React.FC<TourProps> = ({ steps, isOpen, onClose }) => {
       // Cleanup: cancel the tour on component unmount
       tour.current?.cancel();
     };
-  }, [isOpen, steps]);
+  }, [isOpen]);
 
   return null;
 };
