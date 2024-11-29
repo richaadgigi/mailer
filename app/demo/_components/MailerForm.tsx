@@ -1,5 +1,5 @@
 "use client"
-import React from 'react'
+import React, { FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -22,12 +22,20 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
- 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+
 import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { Eye, EyeOff, Info, Loader2 } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff, Info, Loader2, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 
@@ -42,6 +50,7 @@ const MailerForm = () => {
   const [ isPasswordShown, setIsPasswordShown ] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const { toast } = useToast()
+  const [acceptedEmails, setAcceptedEmails] = React.useState<Array<string> | undefined>([])
 
 
 
@@ -116,6 +125,12 @@ const MailerForm = () => {
             const smtphost = email.split('@')[1]
             return smtphost
           }
+
+          const handleEmailOnchangeArray = async (emailFile: any) => {
+            const  emailArray = await convertEmailsToArray(emailFile)
+            setAcceptedEmails(emailArray)
+          }
+
 
         
           async function onSubmit(data: z.infer<typeof formSchema>) {
@@ -242,16 +257,51 @@ const MailerForm = () => {
                               <FormControl>
                                 {isSingleEmail ?
                                 <div className='w-full pr-20'>
-                                <Input type={'file'} ref={field.ref} accept='.csv, .xlsx, .txt'  onChange={(e) => field.onChange(e.target.files)} className={`file:bg-violet-50 file:text-violet-700 rounded-md hover:file:bg-violet-100 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-none bg-white shadow-none`}/>
+                                <Input type={'file'} ref={field.ref} accept='.csv, .xlsx, .txt'  onChange={(e) => {field.onChange(e.target.files), handleEmailOnchangeArray(e.target.files)}} className={`file:bg-violet-50 file:text-violet-700 rounded-md hover:file:bg-violet-100 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-none bg-white shadow-none`}/>
                                 </div>
                                 :
                                 <div className='w-full pr-20'>
-                                <Input type="email" placeholder="receiver@gmail.com" ref={field.ref} onChange={(e) => field.onChange(e.target.value)} className={`ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
+                                <Input type="email" placeholder="receiver@gmail.com" ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailOnchangeArray(e.target.value)}} className={`ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
                                 </div>
                                 }
                               </FormControl>
 
                           </div>
+                          <ol className='text-sm'>
+                            {acceptedEmails && acceptedEmails.length > 2 ?
+                              <Dialog>
+                                <DialogTrigger>
+                                    <span className='flex border rounded-2xl py-1 px-2 w-fit items-center'>
+                                      <span>
+                                        {acceptedEmails[0]} and {acceptedEmails.length - 1} more.
+                                      </span>
+                                      <ChevronDown/>                   
+                                    </span>
+  
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle className='text-left text-2xl'>Accepted Emails</DialogTitle>
+                                    <hr className='py-1'/>
+                                    <DialogDescription className='space-y-2'>
+                                      {acceptedEmails && acceptedEmails.map((email, index) => (
+                                        <span key={`${email}-${index}`} className='flex justify-between text-sm text-black'>
+                                          <span>{email}</span>
+                                          <X color='red'/>
+                                        </span>
+                                      ))}
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                </DialogContent>
+                              </Dialog>
+                            : acceptedEmails && acceptedEmails.map((email, index) => (
+                              <li key={`${email}-${index}`} className='flex border rounded-2xl py-1 px-2 w-fit items-center'>
+                                <span>{email}</span>
+                                </li>
+                            ))}
+
+                          </ol>
+
                           <FormMessage/>
                         </FormItem>
                       )}
