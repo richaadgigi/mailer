@@ -16,10 +16,10 @@ const Nav = () => {
         <Link href={'https://instagram.com/xnyderhq'} title='Instagram' className='flex items-center justify-center w-10 h-10 bg-blue-700 text-white rounded-full'>
             <LogoInstagram size={18.4} />
         </Link>
-        <Link href={'https://x.com/xnyderhq'} title='Twitter' className='flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full'>
+        <Link href={'https://x.com/xnyderhq'} title='Twitter' className='flex items-center justify-center w-10 h-10 bg-blue-700 text-white rounded-full'>
             <LogoX size={18.4} />
         </Link>
-        <Link href={``} className='flex items-center justify-center bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-500 transition-all duration-500' title='Buy us a coffee'>Buy us a coffee <Coffee className='ml-2'/></Link>
+        {/* <Link href={``} className='flex items-center justify-center bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-500 transition-all duration-500' title='Buy us a coffee'>Buy us a coffee <Coffee className='ml-2'/></Link> */}
       </ul>
       
     </nav>
