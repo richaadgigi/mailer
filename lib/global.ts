@@ -1,12 +1,84 @@
 import * as XLSX from "xlsx"; 
 import { parse } from "papaparse"; 
 
+ 
+export const steps = [
+  {
+    id: 'email-step',
+    title: 'Email Input',
+    text: 'Which email are you sending from?',
+    attachTo: { element: '#from-email', on: "bottom" },
+  },
+  {
+    id: 'email-step',
+    title: 'Emails',
+    text: 'Emails that will receive the message. You can add multiple email will a comma.',
+    attachTo: { element: '#emails', on: "bottom" },
+  },
+  {
+    id: 'email-icon-step',
+    title: 'Toggle',
+    text: 'Switch and insert a - .txt, .csv, .xlsx - file. We filter the emails in it.',
+    attachTo: { element: '#emails-toggle', on: "bottom" },
+  },
+  {
+    id: 'subject-step',
+    title: 'Subject Input',
+    text: 'The heading of your mail.',
+    attachTo: { element: '#subject', on: "bottom" },
+  },
+  {
+    id: 'html-step',
+    title: 'Text content',
+    text: 'Type your content here...',
+    attachTo: { element: '#html', on: "top" },
+  },
+  {
+    id: 'username-step',
+    title: 'Username',
+    text: 'The username you use for sign in.',
+    attachTo: { element: '#username', on: "top" },
+  },
+  {
+    id: 'password-step',
+    title: 'Password',
+    text: 'Password needed for sign in',
+    attachTo: { element: '#password', on: "top" },
+  },
+  {
+    id: 'host-step',
+    title: 'Host type',
+    text: 'Choose my server if you prefer to use your server.',
+    attachTo: { element: '#host', on: "top" },
+  },
+  {
+    id: 'sender-step',
+    title: 'Sender',
+    text: 'The name that will appear as the sender.',
+    attachTo: { element: '#sender', on: "top" },
+  },
+  {
+    id: 'reply-step',
+    title: 'Reply',
+    text: 'An accessible email that is easily reached.',
+    attachTo: { element: '#reply_to', on: "top" },
+  },
+  {
+    id: 'attachment-step',
+    title: 'Documents',
+    text: 'Documents can be attached here.',
+    attachTo: { element: '#attachments', on: "top" },
+  },
+];
+
+export const emailRegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export const handleCSVUpload = async (file: File) => {
     const csvData = await new Promise<string[]>((resolve, reject) => {
           parse(file, {
             complete: (result) => {
               const parsedEmails: any = result.data.flat(); // Flatten in case of nested arrays
-              resolve(parsedEmails.filter((email:string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))); // Filter valid emails
+              resolve(parsedEmails.filter((email:string) => emailRegExp.test(email))); // Filter valid emails
             },
             error: reject,
           });
@@ -27,7 +99,7 @@ export   const handleXLSXUpload = async (file: File) => {
           const firstSheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[firstSheetName];
           const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as string[][];
-          emailsArray = rows.flat().filter((email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+          emailsArray = rows.flat().filter((email) => emailRegExp.test(email));
           resolve();
         } catch (err) {
           reject(err);
@@ -45,7 +117,7 @@ export const convertTextFileToArray = async (data: File) => {
         const fileArray = fileContent
           .split(/\r?\n/) // Split by new lines
           .map((line: string) => line.trim()) // Trim whitespace
-          .filter((email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)); // Validate email format
+          .filter((email) => emailRegExp.test(email)); // Validate email format
 
           return fileArray
 
@@ -98,3 +170,18 @@ export const getSmtpHost = (email: string) => {
   return smtphost
 }
  
+export const isEmailValidated = (email: string) => {
+  const emailArray = email.split(/[\s,]+/)
+
+  let isValid;
+  for(const email of emailArray){
+    if(email.trim().length){
+      isValid = emailRegExp.test(email)
+      if(!isValid){
+        return false
+      }
+
+    }
+  }
+  return isValid
+}

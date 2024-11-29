@@ -38,10 +38,9 @@ import { z } from "zod"
 import { ChevronDown, Eye, EyeOff, Info, Loader2, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { StepType, TourProvider, useTour } from '@reactour/tour'
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast"
-import { convertAttachmentToArray, convertEmailsToArray, getSmtpHost } from '@/lib/global'
+import { convertAttachmentToArray, convertEmailsToArray, emailRegExp, getSmtpHost, isEmailValidated, steps } from '@/lib/global'
 import AppTour from '@/hooks/Tour'
 
 const AcceptedTypes = ['text/csv', 'text/xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain']
@@ -54,77 +53,6 @@ const MailerForm = () => {
   const [acceptedEmails, setAcceptedEmails] = React.useState<Array<string> | undefined>([])
   const [isTourOpen, setIsTourOpen] = React.useState(false);
 
-  const steps = [
-    {
-      id: 'email-step',
-      title: 'Email Input',
-      text: 'Which email are you sending from?',
-      attachTo: { element: '#from-email', on: "bottom" },
-    },
-    {
-      id: 'email-step',
-      title: 'Emails',
-      text: 'Emails that will receive the message. You can add multiple email will a comma.',
-      attachTo: { element: '#emails', on: "bottom" },
-    },
-    {
-      id: 'email-icon-step',
-      title: 'Toggle',
-      text: 'Switch and insert a - .txt, .csv, .xlsx - file. We filter the emails in it.',
-      attachTo: { element: '#emails-toggle', on: "bottom" },
-    },
-    {
-      id: 'subject-step',
-      title: 'Subject Input',
-      text: 'The heading of your mail.',
-      attachTo: { element: '#subject', on: "bottom" },
-    },
-    {
-      id: 'html-step',
-      title: 'Text content',
-      text: 'Type your content here...',
-      attachTo: { element: '#html', on: "top" },
-    },
-    {
-      id: 'username-step',
-      title: 'Username',
-      text: 'The username you use for sign in.',
-      attachTo: { element: '#username', on: "top" },
-    },
-    {
-      id: 'password-step',
-      title: 'Password',
-      text: 'Password needed for sign in',
-      attachTo: { element: '#password', on: "top" },
-    },
-    {
-      id: 'host-step',
-      title: 'Host type',
-      text: 'Choose my server if you prefer to use your server.',
-      attachTo: { element: '#host', on: "top" },
-    },
-    {
-      id: 'sender-step',
-      title: 'Sender',
-      text: 'The name that will appear as the sender.',
-      attachTo: { element: '#sender', on: "top" },
-    },
-    {
-      id: 'reply-step',
-      title: 'Reply',
-      text: 'An accessible email that is easily reached.',
-      attachTo: { element: '#reply_to', on: "top" },
-    },
-    {
-      id: 'attachment-step',
-      title: 'Documents',
-      text: 'Documents can be attached here.',
-      attachTo: { element: '#attachments', on: "top" },
-    },
-  ];
-
-
-
     const formSchema = z.object({
         host_type: z.string().min(2, {
           message: "Host type is required",
@@ -132,13 +60,13 @@ const MailerForm = () => {
         smtp_host: z.string().optional(),
         username: z.string().min(2, {
           message: "Username must be at least 2 characters.",
-        }),
+        }).refine((value) => value && value?.trim().length >= 2, {message: "Invalid data."}),
         password: z.string().min(2, {
           message: "Password must be at least 2 characters.",
-        }),
+        }).refine((value) => value && value?.trim().length >= 2, {message: "Invalid data."}),
         from_email: z.string().email().min(2, {
           message: "Email must be at least 2 characters.",
-        }),
+        }).refine((value) => value && value?.trim().length >= 2, {message: "Invalid data."}),
         emails: isSingleEmail ?
         typeof window !== "undefined" ?
         z.instanceof(FileList, {message: ""}).refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).refine((files) => AcceptedTypes.includes(files?.[0].type), {message: "Only csv, xlsx, txt accepted"}).optional()
@@ -147,21 +75,21 @@ const MailerForm = () => {
         :
         z.string({required_error: ""}).min(2, {
           message: "Email must be at least 2 characters.",
-        }).refine((value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.split(/[\s,]+/)[0]), {message: "No valid email added."}),
+        }).refine((value) => isEmailValidated(value), {message: "Invalid email detected. Please check."}),
         subject: z.string().min(2, {
           message: "Subject must be at least 2 characters.",
-        }).optional(),
+        }).optional().refine((value) => value && value?.trim().length >= 2, {message: "Invalid data."}),
         text: z.string().optional(),
         html: z.string().min(2, {
           message: "Html must be at least 2 characters.",
-        }),
+        }).refine((value) => value && value?.trim().length >= 2, {message: "Invalid data."}),
         attachments: typeof window !== "undefined" ?
         z.instanceof(FileList, {message: ""}).refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).optional()
         :
         z.any().refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).optional()
         ,
         sender: z.string().optional(),
-        reply_to: z.string().optional().refine((value) =>  !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value), {message: "Reply-to must be a valid email address."}),
+        reply_to: z.string().optional().refine((value) =>  !value || emailRegExp.test(value), {message: "Reply-to must be a valid email address."}),
       })
       // .superRefine((data, ctx) => {
       //   if (data.host_type.toLocaleLowerCase() === "other" && !data.smtp_host?.trim()) {
@@ -198,7 +126,7 @@ const MailerForm = () => {
 
           const handleEmailOnchangeArrayText = async (email: any) => {
             const  emailArray = email.split(/[\s,]+/)
-            const filteredEmailArray = emailArray.filter((email:any) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+            const filteredEmailArray = emailArray.filter((email:any) =>emailRegExp.test(email));
             setAcceptedEmails(filteredEmailArray)
           }
 
