@@ -15,7 +15,7 @@ const LandingPage = () => {
             <h1 className='md:text-2xl text-lg'>Explore <span className='text-blue-600'>the </span> simplicity in mailing with<span className='text-blue-600'> Mailer</span>.</h1>
             <p className='my-2 text-sm'><span className='opacity-60'>Easily send mails to </span> <span className='text-blue-600'>Clients</span> <span className='opacity-60'>right here and now.  Tap the button and let the magic unfold! ✨</span></p>
             
-            <Link href={`/demo`} className='md:mx-0 mx-auto border w-fit  delay-200 transition-all'>
+            <Link href={`/demo`} className='md:mx-0 mx-auto w-fit  delay-200 transition-all'>
                 <Button className='bg-blue-600 w-52 py-6 transition-all duration-500 delay-100 rounded-full  text-center'><span className='text-center w-full'> Try it out </span> <span className='bg-white p-2 rounded-full text-blue-700 border ml-auto '><Send className="animate-pulse mx-auto w-fit"/></span></Button>
             </Link>
     </section>
