@@ -16,6 +16,13 @@ body {
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
+
+  .xynder-text-color{
+    color: #2852DC
+  }
+  .xynder-bg-color{
+    background: #2852DC
+  }
 }
 .input{
   border-bottom: 1.2px solid rgba(0, 0, 0, .2);
