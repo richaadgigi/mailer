@@ -219,7 +219,7 @@ const MailerForm = () => {
   return (
     <section className='relative'>
          <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-6 flex md:flex-nowrap flex-wrap md:pt-0 pt-24">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-6 flex md:flex-nowrap flex-wrap md:pt-7">
                 <span onClick={() => setIsTourOpen(true)} className='mt-24 border bg-white shadow w-fit h-fit py-2 px-4 ml-2 cursor-pointer sticky top-24'>Take Tour</span>
 
                 <div className='bg-white mt-24 py-5 md:max-w-[36rem] w-full mx-auto p-4 md:rounded-2xl md:!sticky h-fit top-28 md:flex-1'>
