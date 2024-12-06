@@ -42,6 +42,7 @@ import axios from "axios";
 import { useToast } from "@/hooks/use-toast"
 import { convertAttachmentToArray, convertEmailsToArray, emailRegExp, getSmtpHost, isEmailValidated, steps } from '@/lib/global'
 import AppTour from '@/hooks/Tour'
+import { EditorContent, EditorRoot } from "novel";
 
 const AcceptedTypes = ['text/csv', 'text/xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain']
 
@@ -52,6 +53,7 @@ const MailerForm = () => {
   const { toast } = useToast()
   const [acceptedEmails, setAcceptedEmails] = React.useState<Array<string> | undefined>([])
   const [isTourOpen, setIsTourOpen] = React.useState(false);
+  const [content, setContent] = React.useState(null);
 
     const formSchema = z.object({
         host_type: z.string().min(2, {
@@ -64,8 +66,8 @@ const MailerForm = () => {
         password: z.string().min(2, {
           message: "Password must be at least 2 characters.",
         }).refine((value) => value && value?.trim().length >= 2, {message: "Invalid data."}),
-        from_email: z.string().email().min(2, {
-          message: "Email must be at least 2 characters.",
+        from_email: z.string().min(2, {
+          message: "Text must be at least 2 characters.",
         }).refine((value) => value && value?.trim().length >= 2, {message: "Invalid data."}),
         emails: isSingleEmail ?
         typeof window !== "undefined" ?
@@ -219,8 +221,8 @@ const MailerForm = () => {
   return (
     <section className='relative'>
          <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-6 flex md:flex-nowrap flex-wrap md:pt-7">
-                <span onClick={() => setIsTourOpen(true)} className='mt-24 border bg-white shadow w-fit h-fit py-2 px-4 ml-2 cursor-pointer sticky top-24'>Take Tour</span>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-6 flex md:flex-nowrap flex-wrap md:pt-7">
+                <span onClick={() => setIsTourOpen(true)} className='mt-24 border bg-white shadow w-fit h-fit py-2 px-4 ml-2 cursor-pointer md:sticky top-24'>Take Tour</span>
 
                 <div className='bg-white mt-24 py-5 md:max-w-[36rem] w-full mx-auto p-4 md:rounded-2xl md:!sticky h-fit top-28 md:flex-1'>
                   
@@ -233,13 +235,13 @@ const MailerForm = () => {
                                 From:
                             </FormLabel>
                             <FormControl>
-                            <Input type='email' placeholder="info@server.com"  {...field} className={` ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0 rounded-none pt-0 pb-2`}/>
+                            <Input placeholder="'Customer Agent info@server.com' or 'info@server.com'"  {...field} className={` ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0 rounded-none pt-0 pb-2`}/>
                             </FormControl>
                         </FormItem>
                         )}
                     />
                   <div className='relative'>
-                    <div className='flex justify-center w-fit items-center gap-2 pb-1 absolute right-4 top-4' id='emails-toggle'>
+                    {/* <div className='flex justify-center w-fit items-center gap-2 pb-1 absolute right-4 top-4' id='emails-toggle'>
                         <Switch checked={isSingleEmail}  onCheckedChange={()=>setIsSingleEmail(!isSingleEmail)}/>
                         <HoverCard>
                           <HoverCardTrigger><Info color='red' className='cursor-pointer'/></HoverCardTrigger>
@@ -248,7 +250,7 @@ const MailerForm = () => {
                           </HoverCardContent>
                         </HoverCard>
 
-                    </div>
+                    </div> */}
                     <FormField
                       control={form.control}
                       name="emails"
@@ -256,10 +258,10 @@ const MailerForm = () => {
                         <FormItem id='emails' className={`${form.control._formState.errors.emails && "border-b-red-500 !border-b-2"} border-b w-full flex gap-x-1 flex-col py-2`}>
                           <div className='flex items-center gap-x-1'>
                             <FormLabel className="text-muted-foreground">
-                              {isSingleEmail ? 'Recipients:' : 'Recipient:'} 
+                              Recipients:
                             </FormLabel>
                               <FormControl>
-                                {isSingleEmail ?
+                                {/* {isSingleEmail ?
                                 <div className='w-full pr-20'>
                                 <Input type={'file'} ref={field.ref} accept='.csv, .xlsx, .txt'  onChange={(e) => {field.onChange(e.target.files), handleEmailOnchangeArrayFile(e.target.files)}} className={`file:bg-violet-50 file:text-violet-700 rounded-md hover:file:bg-violet-100 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-none bg-white shadow-none`}/>
                                 </div>
@@ -267,7 +269,10 @@ const MailerForm = () => {
                                 <div className='w-full pr-20'>
                                 <Input type="text" placeholder="receiver@gmail.com" ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailOnchangeArrayText(e.target.value)}} className={`ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
                                 </div>
-                                }
+                                } */}
+                                <div className='w-full pr-20'>
+                                  <Input type="text" placeholder="receiver@gmail.com" ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailOnchangeArrayText(e.target.value)}} className={`ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
+                                </div>
                               </FormControl>
 
                           </div>
@@ -341,10 +346,19 @@ const MailerForm = () => {
                       </FormItem>
                     )}
                   />
+                   {/* <EditorRoot>
+                    <EditorContent
+                      initialContent={content}
+                      onUpdate={({ editor }) => {
+                        const json = editor.getJSON();
+                        setContent(json);
+                      }}
+                    />
+                  </EditorRoot> */}
 
 
                 </div>
-                <div className='md:right-0 !pt-20 px-3 md:!w-80 w-full bg-white space-y-5'>
+                <div className='md:right-0 !pt-20 pb-6 px-3 md:!w-80 w-full bg-white space-y-5'>
                     <h2 className='text-lg pb-1 font-bold'>Configuration</h2>
                     <FormField
                         control={form.control}

@@ -71,7 +71,8 @@ export const steps = [
   },
 ];
 
-export const emailRegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// export const emailRegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+export const emailRegExp = /^[^\s@]+@[^\s@]+\.[a-zA-Z0-9]+$/
 
 export const handleCSVUpload = async (file: File) => {
     const csvData = await new Promise<string[]>((resolve, reject) => {
