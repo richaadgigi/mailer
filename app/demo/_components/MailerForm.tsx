@@ -103,7 +103,7 @@ const MailerForm = () => {
         :
         z.string({required_error: ""}).min(2, {
           message: "Email must be at least 2 characters.",
-        }).refine((value) => isEmailValidated(value), {message: "Invalid email detected. Please check."}),
+        }).refine((value) => isEmailValidated(value), {message: "Invalid email detected. Please check."}).refine(() => acceptedEmails!.length > 0, {message: "No email added."}),
         subject: z.string().min(2, {
           message: "Subject must be at least 2 characters.",
         }).optional().refine((value) => value && value?.trim().length >= 2, {message: "Invalid data."}),
@@ -251,6 +251,7 @@ const MailerForm = () => {
         
           async function onSubmit(data: z.infer<typeof formSchema>) {
             const  attachmentArray = convertAttachmentToArray(data.attachments)
+            console.log('data', data)
             
 
             // Prepare JSON payload
