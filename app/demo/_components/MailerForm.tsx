@@ -30,6 +30,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+
 
 import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -42,7 +48,8 @@ import axios from "axios";
 import { useToast } from "@/hooks/use-toast"
 import { convertAttachmentToArray, convertEmailsToArray, emailRegExp, getSmtpHost, isEmailValidated, steps } from '@/lib/global'
 import AppTour from '@/hooks/Tour'
-import { EditorContent, EditorRoot } from "novel";
+import { EditorContent, EditorRoot, JSONContent } from "novel";
+import Editor from '@/components/editor/advanced-editor'
 
 const AcceptedTypes = ['text/csv', 'text/xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain']
 
@@ -53,7 +60,26 @@ const MailerForm = () => {
   const { toast } = useToast()
   const [acceptedEmails, setAcceptedEmails] = React.useState<Array<string> | undefined>([])
   const [isTourOpen, setIsTourOpen] = React.useState(false);
-  const [content, setContent] = React.useState(null);
+  const [content, setContent] = React.useState<JSONContent>();
+  const [validEmail, setValidEmail] = React.useState<string | null>(null);
+  const [showAddPopover, setShowAddPopover] = React.useState(false);
+  const [currentInput, setCurrentInput] = React.useState<string>("");
+
+  const defaultValue = {
+    type: 'doc',
+    content: [
+      {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: 'Type "/" for contents to start writing...'
+          }
+        ]
+      }
+    ]
+  }
+  // const defaultValue = ''
 
     const formSchema = z.object({
         host_type: z.string().min(2, {
@@ -82,7 +108,7 @@ const MailerForm = () => {
           message: "Subject must be at least 2 characters.",
         }).optional().refine((value) => value && value?.trim().length >= 2, {message: "Invalid data."}),
         text: z.string().optional(),
-        html: z.string().min(2, {
+        html: z.string().min(4, {
           message: "Html must be at least 2 characters.",
         }).refine((value) => value && value?.trim().length >= 2, {message: "Invalid data."}),
         attachments: typeof window !== "undefined" ?
@@ -126,16 +152,89 @@ const MailerForm = () => {
             setAcceptedEmails(emailArray)
           }
 
-          const handleEmailOnchangeArrayText = async (email: any) => {
+          const handleEmailInput = async (email: any) => {
             const  emailArray = email.split(/[\s,]+/)
-            const filteredEmailArray = emailArray.filter((email:any) =>emailRegExp.test(email));
-            setAcceptedEmails(filteredEmailArray)
+            if(emailArray.length <= 1){
+              const trimmedEmail = email.trim();
+              setCurrentInput(trimmedEmail)
+            }else{
+              const filteredEmailArray = emailArray.filter((email:any) =>emailRegExp.test(email));
+              setAcceptedEmails(filteredEmailArray)
+            }
           }
 
           const removeEmail = (email:string) => {
             const filteredEmailArray = acceptedEmails?.filter((prev) => prev !== email)
             setAcceptedEmails(filteredEmailArray)
           }
+        
+          const addEmail = () => {
+            const trimmedEmail = currentInput.trim();
+            if (emailRegExp.test(trimmedEmail) && !acceptedEmails?.includes(trimmedEmail)) {
+              setAcceptedEmails([...(acceptedEmails as string[]), trimmedEmail]);
+              setCurrentInput("");
+            }
+          };
+        
+          const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+            if (event.key === "Enter" && validEmail) {
+              event.preventDefault();
+              addEmail();
+            }
+          };
+
+          const renderEmails = () => (
+            <ol className='text-sm flex items-center'>
+                {acceptedEmails && acceptedEmails.length > 2 ?
+                  <Dialog>
+                    <DialogTrigger>
+                        <span className='flex border rounded-2xl py-1 px-2 w-fit items-center'>
+                          <span>
+                            {acceptedEmails[0]} and {acceptedEmails.length - 1} more.
+                          </span>
+                          <ChevronDown/>                   
+                        </span>
+
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle className='text-left text-2xl'>Accepted Emails</DialogTitle>
+                        <hr className='py-1'/>
+                        <DialogDescription className='space-y-2'>
+                          {acceptedEmails && acceptedEmails.map((email, index) => (
+                            <span key={`${email}-${index}`} className='flex justify-between text-sm text-black'>
+                              <span>{email}</span>
+                              <X color='red' onClick={()=>removeEmail(email)} className='cursor-pointer'/>
+                            </span>
+                          ))}
+                        </DialogDescription>
+                      </DialogHeader>
+                    </DialogContent>
+                  </Dialog>
+                :
+                acceptedEmails?.map((email, index) => (
+                  <span
+                    key={index}
+                    className={`flex items-center rounded-full border px-2 py-1 mr-2 ${
+                      emailRegExp.test(email) ? "border-gray-300" : "border-red-500 border-dotted"
+                    }`}
+                  >
+                    {email}
+                    <button
+                      type="button"
+                      className="ml-2 text-red-500 hover:text-red-700"
+                      onClick={() => removeEmail(email)}
+                    >
+                      &times;
+                    </button>
+                  </span>
+                ))
+
+                }
+
+            </ol>
+          )
+        
 
 
         
@@ -218,10 +317,11 @@ const MailerForm = () => {
             setIsLoading(false)
             }
           }
+          
   return (
     <section className='relative'>
          <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-6 flex md:flex-nowrap flex-wrap md:pt-7">
+              <form onSubmit={form.handleSubmit(onSubmit)} onKeyDown={(event) => event.key === "Enter" && event.preventDefault()} className="space-y-4 pt-6 flex md:flex-nowrap flex-wrap md:pt-7">
                 <span onClick={() => setIsTourOpen(true)} className='mt-24 border bg-white shadow w-fit h-fit py-2 px-4 ml-2 cursor-pointer md:sticky top-24'>Take Tour</span>
 
                 <div className='bg-white mt-24 py-5 md:max-w-[36rem] w-full mx-auto p-4 md:rounded-2xl md:!sticky h-fit top-28 md:flex-1'>
@@ -249,8 +349,9 @@ const MailerForm = () => {
                             You can also separate multiple emails with a comma, else simply add a file.
                           </HoverCardContent>
                         </HoverCard>
-
-                    </div> */}
+                        
+                        </div> */}
+                        
                     <FormField
                       control={form.control}
                       name="emails"
@@ -270,46 +371,23 @@ const MailerForm = () => {
                                 <Input type="text" placeholder="receiver@gmail.com" ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailOnchangeArrayText(e.target.value)}} className={`ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
                                 </div>
                                 } */}
-                                <div className='w-full pr-20'>
-                                  <Input type="text" placeholder="receiver@gmail.com" ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailOnchangeArrayText(e.target.value)}} className={`ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
+                                <div className='w-full pr-10 flex items-center px-2 py-1 gap-2 flex-wrap overflow-auto no-scrollbar'>
+                                    {renderEmails()}
+                                    <Input type="text" value={currentInput} placeholder="receiver@gmail.com" onKeyDown={handleKeyPress} ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailInput(e.target.value)}} className={`ring-offset-transparent flex-1 focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
+                                  {emailRegExp.test(currentInput) && (
+                                    <div
+                                      className="absolute top-full mt-1 bg-white border rounded-md shadow-md p-2 cursor-pointer"
+                                      onClick={addEmail}
+                                    >
+                                      Add "{currentInput}"
+                                    </div>
+                                  )}
+                                   
                                 </div>
                               </FormControl>
 
                           </div>
-                          <ol className='text-sm'>
-                            {acceptedEmails && acceptedEmails.length > 2 ?
-                              <Dialog>
-                                <DialogTrigger>
-                                    <span className='flex border rounded-2xl py-1 px-2 w-fit items-center'>
-                                      <span>
-                                        {acceptedEmails[0]} and {acceptedEmails.length - 1} more.
-                                      </span>
-                                      <ChevronDown/>                   
-                                    </span>
-  
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle className='text-left text-2xl'>Accepted Emails</DialogTitle>
-                                    <hr className='py-1'/>
-                                    <DialogDescription className='space-y-2'>
-                                      {acceptedEmails && acceptedEmails.map((email, index) => (
-                                        <span key={`${email}-${index}`} className='flex justify-between text-sm text-black'>
-                                          <span>{email}</span>
-                                          <X color='red' onClick={()=>removeEmail(email)} className='cursor-pointer'/>
-                                        </span>
-                                      ))}
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                </DialogContent>
-                              </Dialog>
-                            : acceptedEmails && acceptedEmails.map((email, index) => (
-                              <li key={`${email}-${index}`} className='flex border rounded-2xl py-1 px-2 w-fit items-center mb-1'>
-                                <span>{email}</span>
-                                </li>
-                            ))}
-
-                          </ol>
+                          
 
                           <FormMessage/>
                         </FormItem>
@@ -337,26 +415,18 @@ const MailerForm = () => {
                     name="html"
                     render={({ field }) => (
                       <FormItem id='html' className='w-full'>
+                        {/* <FormLabel>Type "/" for contents to start writing...</FormLabel> */}
                         <FormControl>
-                          <Textarea placeholder="Type here..." {...field} rows={12} className={`${form.control._formState.errors.html && "border-b-red-500 !border-b-2"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-b rounded-none mt-4 px-2`}/>
+                          <Editor initialValue={defaultValue} {...field} givenClass={`${form.control._formState.errors.html && "border-b-red-500 !border-b-2"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-b rounded-none mt-4 px-2 list-inside`}/>
+                          {/* <Textarea placeholder="Type here..." {...field} rows={12} className={`${form.control._formState.errors.html && "border-b-red-500 !border-b-2"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-b rounded-none mt-4 px-2`}/> */}
                         </FormControl>
                         <FormDescription>
                           The content of the email.
                         </FormDescription>
+                        <FormMessage/>
                       </FormItem>
                     )}
                   />
-                   {/* <EditorRoot>
-                    <EditorContent
-                      initialContent={content}
-                      onUpdate={({ editor }) => {
-                        const json = editor.getJSON();
-                        setContent(json);
-                      }}
-                    />
-                  </EditorRoot> */}
-
-
                 </div>
                 <div className='md:right-0 !pt-20 pb-6 px-3 md:!w-80 w-full bg-white space-y-5'>
                     <h2 className='text-lg pb-1 font-bold'>Configuration</h2>
