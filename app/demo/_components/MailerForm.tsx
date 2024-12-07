@@ -36,7 +36,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -158,8 +158,12 @@ const MailerForm = () => {
               const trimmedEmail = email.trim();
               setCurrentInput(trimmedEmail)
             }else{
-              const filteredEmailArray = emailArray.filter((email:any) =>emailRegExp.test(email));
-              setAcceptedEmails(filteredEmailArray)
+              const filteredEmailArray = emailArray.filter((email:string, index: number) =>emailRegExp.test(email) && !acceptedEmails?.includes(email) && emailArray.indexOf(email) === index);
+              if (filteredEmailArray.length > 0){
+                for(const filteredEmail of filteredEmailArray){
+                  setAcceptedEmails((prev)=>[...(prev as string[]), filteredEmail])
+                }
+              }
             }
           }
 
@@ -172,14 +176,21 @@ const MailerForm = () => {
             const trimmedEmail = currentInput.trim();
             if (emailRegExp.test(trimmedEmail) && !acceptedEmails?.includes(trimmedEmail)) {
               setAcceptedEmails([...(acceptedEmails as string[]), trimmedEmail]);
-              setCurrentInput("");
             }
+            setCurrentInput("");
           };
         
           const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-            if (event.key === "Enter" && validEmail) {
+            if (event.key === "Enter") {
               event.preventDefault();
+              event.stopPropagation(); 
               addEmail();
+            }
+          };
+          const handlePrematureFormSubmission = (event: React.KeyboardEvent<HTMLFormElement>) => {
+            // Prevent Enter globally if not inside an input
+            if (event.key === "Enter" && !(event.target instanceof HTMLInputElement)) {
+              event.preventDefault();
             }
           };
 
@@ -190,7 +201,7 @@ const MailerForm = () => {
                     <DialogTrigger>
                         <span className='flex border rounded-2xl py-1 px-2 w-fit items-center'>
                           <span>
-                            {acceptedEmails[0]} and {acceptedEmails.length - 1} more.
+                            {acceptedEmails[0].length > 10 ? (acceptedEmails[0].slice(0,5) + "...") : acceptedEmails[0]} and {acceptedEmails.length - 1} more.
                           </span>
                           <ChevronDown/>                   
                         </span>
@@ -271,7 +282,7 @@ const MailerForm = () => {
             // Handle successful response
             console.log("File uploaded successfully:", response.data);
             toast({
-                description: "File uploaded successfully!",
+                description: "Sent successfully!",
                 variant: "success"
             })
 
@@ -321,7 +332,7 @@ const MailerForm = () => {
   return (
     <section className='relative'>
          <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} onKeyDown={(event) => event.key === "Enter" && event.preventDefault()} className="space-y-4 pt-6 flex md:flex-nowrap flex-wrap md:pt-7">
+              <form onSubmit={form.handleSubmit(onSubmit)} onKeyDown={handlePrematureFormSubmission} className="space-y-4 pt-6 flex md:flex-nowrap flex-wrap md:pt-7">
                 <span onClick={() => setIsTourOpen(true)} className='mt-24 border bg-white shadow w-fit h-fit py-2 px-4 ml-2 cursor-pointer md:sticky top-24'>Take Tour</span>
 
                 <div className='bg-white mt-24 py-5 md:max-w-[36rem] w-full mx-auto p-4 md:rounded-2xl md:!sticky h-fit top-28 md:flex-1'>
@@ -371,21 +382,24 @@ const MailerForm = () => {
                                 <Input type="text" placeholder="receiver@gmail.com" ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailOnchangeArrayText(e.target.value)}} className={`ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
                                 </div>
                                 } */}
-                                <div className='w-full pr-10 flex items-center px-2 py-1 gap-2 flex-wrap overflow-auto no-scrollbar'>
+                                <div className='w-full pr-5 flex items-center px-2 py-1 gap-2 flex-wrap overflow-auto no-scrollbar'>
                                     {renderEmails()}
                                     <Input type="text" value={currentInput} placeholder="receiver@gmail.com" onKeyDown={handleKeyPress} ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailInput(e.target.value)}} className={`ring-offset-transparent flex-1 focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
                                   {emailRegExp.test(currentInput) && (
                                     <div
-                                      className="absolute top-full mt-1 bg-white border rounded-md shadow-md p-2 cursor-pointer"
+                                      className="absolute top-full mt-1 bg-white border rounded-md shadow-md p-2 cursor-pointer flex items-center gap-2"
                                       onClick={addEmail}
                                     >
-                                      Add "{currentInput}"
+                                      <Avatar>
+                                        <AvatarImage src="https://github.com/shadcn.png" />
+                                        <AvatarFallback>{currentInput.charAt(0).toLocaleUpperCase()}</AvatarFallback>
+                                      </Avatar>
+                                      <span>{currentInput}</span>
                                     </div>
                                   )}
                                    
                                 </div>
                               </FormControl>
-
                           </div>
                           
 
