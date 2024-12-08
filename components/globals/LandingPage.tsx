@@ -10,7 +10,7 @@ import RetroGrid from "@/components/ui/retro-grid";
  
 const LandingPage = () => {
   return (
-    <section  className="relative flex h-fit w-full flex-col items-center justify-center overflow-hidden bg-background">
+    <section  className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-background">
         <div className='flex flex-col z-10 justify-center items-center md:gap-3 gap-4 md:px-12 px-6 pt-36 pb-5 text-center'>
             <div className='w-fit mb-4'>
                 <Link href="" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=467244&theme=neutral" alt="Mailer - Effortless&#0032;mailing&#0032;service&#0044;&#0032;Instant&#0032;Results | Product Hunt" style={{width: '250px', height: '54px'}} width="250" height="54" /></Link>
