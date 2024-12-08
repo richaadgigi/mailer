@@ -21,13 +21,9 @@ import { slashCommand, suggestionItems } from "./slash-command";
 import { handleImageDrop, handleImagePaste } from "novel/plugins";
 import { uploadFn } from "./image-upload";
 import { Separator } from "../ui/separator";
-import Placeholder from '@tiptap/extension-placeholder'
 
-const extensions = [...defaultExtensions, slashCommand, 
-  Placeholder.configure({
-    placeholder: "Type '/'  for contents to start writing..."
-})
-];
+
+const extensions = [...defaultExtensions, slashCommand];
 
 interface EditorProp {
   initialValue?: any;
