@@ -169,6 +169,7 @@ body {
     float: left;
     height: 0;
     pointer-events: none;
+    opacity: 0.5;
   }
 
   /* Placeholder (on every new line) */
