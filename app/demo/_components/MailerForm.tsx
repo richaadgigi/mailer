@@ -51,6 +51,8 @@ import AppTour from '@/hooks/Tour'
 import { EditorContent, EditorRoot, JSONContent } from "novel";
 import Editor from '@/components/editor/advanced-editor'
 import RichEditor from '@/components/tiptap/RichEditor'
+import parse from 'html-react-parser'
+import HTMLReactParser from 'html-react-parser/lib/index'
 
 const AcceptedTypes = ['text/csv', 'text/xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain']
 
@@ -102,16 +104,14 @@ const MailerForm = () => {
         :
         z.any().refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).refine((files) => files?.[0].type === "text/plain", {message: "Only txt accepted"}).optional()
         :
-        z.string({required_error: ""}).min(2, {
-          message: "Email must be at least 2 characters.",
-        }).refine((value) => isEmailValidated(value), {message: "Invalid email detected. Please check."}).refine(() => acceptedEmails!.length > 0, {message: "No email added."}),
+        z.string({required_error: ""}).refine(() => acceptedEmails!.length > 0, {message: "No email added."}),
         subject: z.string().min(2, {
           message: "Subject must be at least 2 characters.",
         }).optional().refine((value) => value && value?.trim().length >= 2, {message: "Invalid data."}),
         text: z.string().optional(),
         html: z.string().min(4, {
           message: "Html must be at least 2 characters.",
-        }).refine((value) => value && value?.trim().length >= 2, {message: "Invalid data."}),
+        }).refine((value) => value && value?.trim().length >= 2, {message: "Too short."}),
         attachments: typeof window !== "undefined" ?
         z.instanceof(FileList, {message: ""}).refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).optional()
         :
@@ -153,17 +153,26 @@ const MailerForm = () => {
             setAcceptedEmails(emailArray)
           }
 
+          const EMAIL_MAX_SIZE = 100
           const handleEmailInput = async (email: any) => {
             const  emailArray = email.split(/[\s,]+/)
             if(emailArray.length <= 1){
               const trimmedEmail = email.trim();
               setCurrentInput(trimmedEmail)
             }else{
-              const filteredEmailArray = emailArray.filter((email:string, index: number) =>emailRegExp.test(email) && !acceptedEmails?.includes(email) && emailArray.indexOf(email) === index);
-              if (filteredEmailArray.length > 0){
-                for(const filteredEmail of filteredEmailArray){
-                  setAcceptedEmails((prev)=>[...(prev as string[]), filteredEmail])
+              if(acceptedEmails && acceptedEmails?.length < EMAIL_MAX_SIZE){
+                const remainingEmails = EMAIL_MAX_SIZE - acceptedEmails?.length
+                const filteredEmailArray = emailArray.slice(0,remainingEmails).filter((email:string, index: number) =>emailRegExp.test(email) && !acceptedEmails?.includes(email) && emailArray.indexOf(email) === index);
+                if (filteredEmailArray.length > 0){
+                  for(const filteredEmail of filteredEmailArray){
+                    setAcceptedEmails((prev)=>[...(prev as string[]), filteredEmail])
+                  }
                 }
+              }else{
+                toast({
+                  description: `Only ${EMAIL_MAX_SIZE} emails per batch`,
+                  variant: "destructive"
+              })
               }
             }
           }
@@ -175,10 +184,17 @@ const MailerForm = () => {
         
           const addEmail = () => {
             const trimmedEmail = currentInput.trim();
-            if (emailRegExp.test(trimmedEmail) && !acceptedEmails?.includes(trimmedEmail)) {
-              setAcceptedEmails([...(acceptedEmails as string[]), trimmedEmail]);
+            if(acceptedEmails && acceptedEmails?.length < EMAIL_MAX_SIZE){
+              if (emailRegExp.test(trimmedEmail) && !acceptedEmails?.includes(trimmedEmail)) {
+                setAcceptedEmails([...(acceptedEmails as string[]), trimmedEmail]);
+              }
+              setCurrentInput("");
+            }else{
+              toast({
+                description: `Only ${EMAIL_MAX_SIZE} emails per batch`,
+                variant: "destructive"
+            })
             }
-            setCurrentInput("");
           };
         
           const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -195,6 +211,7 @@ const MailerForm = () => {
             }
           };
 
+
           const renderEmails = () => (
             <ol className='text-sm flex items-center'>
                 {acceptedEmails && acceptedEmails.length > 2 ?
@@ -208,17 +225,20 @@ const MailerForm = () => {
                         </span>
 
                     </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle className='text-left text-2xl'>Accepted Emails</DialogTitle>
+                    <DialogContent className='max-h-[40rem] max-w-96 text-wrap overflow-y-auto overflow-x-hidden no-scrollbar'>
+                      <DialogHeader className='space-y-5'>
+                        <DialogTitle className='text-left text-2xl'><span className='border rounded-full mr-1 mb-2 px-4 py-2 text-sm xynder-bg-color text-white'>{acceptedEmails.length}</span>Accepted Emails</DialogTitle>
                         <hr className='py-1'/>
-                        <DialogDescription className='space-y-2'>
-                          {acceptedEmails && acceptedEmails.map((email, index) => (
-                            <span key={`${email}-${index}`} className='flex justify-between text-sm text-black'>
-                              <span>{email}</span>
-                              <X color='red' onClick={()=>removeEmail(email)} className='cursor-pointer'/>
-                            </span>
-                          ))}
+                        <DialogDescription asChild className='space-y-2'>
+                          <ul style={{"listStyleType": "decimal"}}>
+                            {acceptedEmails && acceptedEmails.map((email, index) => (
+                              <span key={`${email}-${index}`} className='flex justify-between text-sm text-black '>
+                                <li className='!break-all max-w-full text-left list-inside'>{email}</li>
+                                <X color='red' onClick={()=>removeEmail(email)} className='cursor-pointer'/>
+                              </span>
+                            ))}
+
+                          </ul>
                         </DialogDescription>
                       </DialogHeader>
                     </DialogContent>
@@ -258,7 +278,7 @@ const MailerForm = () => {
             // Prepare JSON payload
             const payload = {
               host_type: data.host_type.toLocaleUpperCase(),
-              smtp_host: data.host_type === "OTHER" ? getSmtpHost(data.from_email) : undefined,
+              smtp_host: data.host_type === "OTHER" ? getSmtpHost(data.username) : undefined,
               username: data.username,
               password: data.password,
               from_email: data.from_email,
@@ -396,9 +416,10 @@ const MailerForm = () => {
                                         <AvatarImage src="https://github.com/shadcn.png" />
                                         <AvatarFallback>{currentInput.charAt(0).toLocaleUpperCase()}</AvatarFallback>
                                       </Avatar>
-                                      <span>{currentInput}</span>
+                                      <span className='!break-all max-w-full'>{currentInput}</span>
                                     </div>
                                   )}
+
                                    
                                 </div>
                               </FormControl>
@@ -433,7 +454,7 @@ const MailerForm = () => {
                       <FormItem id='html' className='w-full'>
                         {/* <FormLabel>Type "/" for contents to start writing...</FormLabel> */}
                         <FormControl>
-                          <Editor initialValue={defaultValue} {...field} givenClass={`${form.control._formState.errors.html && "border-b-red-500 !border-b-2"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-b rounded-none mt-4 px-2 list-inside`}/>
+                          <Editor {...field} givenClass={`${form.control._formState.errors.html && "border-b-red-500 !border-b-2"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-b rounded-none mt-4 px-2 list-inside`}/>
                           
                           {/* <Textarea placeholder="Type here..." {...field} rows={12} className={`${form.control._formState.errors.html && "border-b-red-500 !border-b-2"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-b rounded-none mt-4 px-2`}/> */}
                         </FormControl>

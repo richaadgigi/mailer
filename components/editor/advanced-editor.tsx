@@ -21,6 +21,7 @@ import { slashCommand, suggestionItems } from "./slash-command";
 import { handleImageDrop, handleImagePaste } from "novel/plugins";
 import { uploadFn } from "./image-upload";
 import { Separator } from "../ui/separator";
+import { BubbleMenu } from "@tiptap/react";
 
 
 const extensions = [...defaultExtensions, slashCommand];
@@ -41,7 +42,7 @@ const Editor = ({ initialValue, onChange, givenClass }: EditorProp) => {
         className={`${givenClass} border p-4 h-80 mt-5 overflow-auto no-scrollbar`}
         {...(initialValue && { initialContent: initialValue })}
         extensions={extensions}
-        
+        immediatelyRender={false}
         editorProps={{
           handleDOMEvents: {
             keydown: (_view, event) => handleCommandNavigation(event),
@@ -54,7 +55,7 @@ const Editor = ({ initialValue, onChange, givenClass }: EditorProp) => {
           },
         }}
         onUpdate={({ editor }) => {
-          onChange(editor.getHTML());
+          onChange(editor.getText());
         }}
         slotAfter={<ImageResizer />}
       >
