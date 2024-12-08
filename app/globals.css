@@ -71,7 +71,7 @@ body {
 }
 
 .tiptap {
-  height: 100% !important;
+  height: 20rem !important;
   :first-child {
     margin-top: 0;
   }

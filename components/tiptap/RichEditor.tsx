@@ -3,14 +3,12 @@ import { EditorContent, EditorProvider, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import React from 'react'
 import Tools from './Tools'
-import Placeholder from '@tiptap/extension-placeholder'
+
 // import './css/styles.css'
 
 const RichEditor = () => {
     const extensions= [StarterKit,
-        Placeholder.configure({
-            placeholder: "Write something..."
-        })
+        
     ]
     const editor = useEditor({
         extensions,
