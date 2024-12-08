@@ -21,8 +21,13 @@ import { slashCommand, suggestionItems } from "./slash-command";
 import { handleImageDrop, handleImagePaste } from "novel/plugins";
 import { uploadFn } from "./image-upload";
 import { Separator } from "../ui/separator";
+import Placeholder from '@tiptap/extension-placeholder'
 
-const extensions = [...defaultExtensions, slashCommand];
+const extensions = [...defaultExtensions, slashCommand, 
+  Placeholder.configure({
+    placeholder: "Type '/'  for contents to start writing..."
+})
+];
 
 interface EditorProp {
   initialValue?: any;
@@ -40,6 +45,7 @@ const Editor = ({ initialValue, onChange, givenClass }: EditorProp) => {
         className={`${givenClass} border p-4 h-80 mt-5 overflow-auto no-scrollbar`}
         {...(initialValue && { initialContent: initialValue })}
         extensions={extensions}
+        
         editorProps={{
           handleDOMEvents: {
             keydown: (_view, event) => handleCommandNavigation(event),

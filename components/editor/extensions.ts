@@ -106,7 +106,7 @@ const starterKit = StarterKit.configure({
 
 export const defaultExtensions = [
   starterKit,
-  placeholder,
+  // placeholder,
   tiptapLink,
   tiptapImage,
   updatedImage,

@@ -55,6 +55,7 @@ export const LinkSelector = ({ open, onOpenChange }: LinkSelectorProps) => {
           size="sm"
           variant="ghost"
           className="gap-2 rounded-none border-none"
+          type="button"
         >
           <p className="text-base">↗</p>
           <p
@@ -71,6 +72,7 @@ export const LinkSelector = ({ open, onOpenChange }: LinkSelectorProps) => {
           onSubmit={(e) => {
             const target = e.currentTarget as HTMLFormElement;
             e.preventDefault();
+            e.stopPropagation();
             const input = target[0] as HTMLInputElement;
             const url = getUrlFromString(input.value);
             if (url) {

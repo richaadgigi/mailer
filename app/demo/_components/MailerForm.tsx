@@ -50,6 +50,7 @@ import { convertAttachmentToArray, convertEmailsToArray, emailRegExp, getSmtpHos
 import AppTour from '@/hooks/Tour'
 import { EditorContent, EditorRoot, JSONContent } from "novel";
 import Editor from '@/components/editor/advanced-editor'
+import RichEditor from '@/components/tiptap/RichEditor'
 
 const AcceptedTypes = ['text/csv', 'text/xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain']
 
@@ -73,7 +74,7 @@ const MailerForm = () => {
         content: [
           {
             type: 'text',
-            text: 'Type "/" for contents to start writing...'
+            text: ''
           }
         ]
       }
@@ -183,7 +184,7 @@ const MailerForm = () => {
           const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
             if (event.key === "Enter") {
               event.preventDefault();
-              event.stopPropagation(); 
+              // event.stopPropagation(); 
               addEmail();
             }
           };
@@ -433,6 +434,7 @@ const MailerForm = () => {
                         {/* <FormLabel>Type "/" for contents to start writing...</FormLabel> */}
                         <FormControl>
                           <Editor initialValue={defaultValue} {...field} givenClass={`${form.control._formState.errors.html && "border-b-red-500 !border-b-2"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-b rounded-none mt-4 px-2 list-inside`}/>
+                          
                           {/* <Textarea placeholder="Type here..." {...field} rows={12} className={`${form.control._formState.errors.html && "border-b-red-500 !border-b-2"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-b rounded-none mt-4 px-2`}/> */}
                         </FormControl>
                         <FormDescription>
@@ -442,6 +444,7 @@ const MailerForm = () => {
                       </FormItem>
                     )}
                   />
+                  {/* <RichEditor/> */}
                 </div>
                 <div className='md:right-0 !pt-20 pb-6 px-3 md:!w-80 w-full bg-white space-y-5'>
                     <h2 className='text-lg pb-1 font-bold'>Configuration</h2>
