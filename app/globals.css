@@ -71,9 +71,11 @@ body {
 }
 
 .tiptap {
+  height: 100% !important;
   :first-child {
     margin-top: 0;
   }
+
 
   /* List styles */
   ul, 
