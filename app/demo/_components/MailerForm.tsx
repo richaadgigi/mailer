@@ -17,11 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card"
+
 import {
   Dialog,
   DialogContent,
@@ -30,29 +26,26 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { ChevronDown, Eye, EyeOff, Info, Loader2, X } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { ChevronDown, Eye, EyeOff, Loader2, Paperclip, X } from 'lucide-react';
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast"
 import { convertAttachmentToArray, convertEmailsToArray, emailRegExp, getSmtpHost, isEmailValidated, steps } from '@/lib/global'
 import AppTour from '@/hooks/Tour'
-import { EditorContent, EditorRoot, JSONContent } from "novel";
 import Editor from '@/components/editor/advanced-editor'
-import RichEditor from '@/components/tiptap/RichEditor'
-import parse from 'html-react-parser'
-import HTMLReactParser from 'html-react-parser/lib/index'
+
 
 const AcceptedTypes = ['text/csv', 'text/xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain']
 
@@ -63,26 +56,8 @@ const MailerForm = () => {
   const { toast } = useToast()
   const [acceptedEmails, setAcceptedEmails] = React.useState<Array<string> | undefined>([])
   const [isTourOpen, setIsTourOpen] = React.useState(false);
-  const [content, setContent] = React.useState<JSONContent>();
-  const [validEmail, setValidEmail] = React.useState<string | null>(null);
-  const [showAddPopover, setShowAddPopover] = React.useState(false);
   const [currentInput, setCurrentInput] = React.useState<string>("");
-
-  const defaultValue = {
-    type: 'doc',
-    content: [
-      {
-        type: 'paragraph',
-        content: [
-          {
-            type: 'text',
-            text: ''
-          }
-        ]
-      }
-    ]
-  }
-  // const defaultValue = ''
+  const EMAIL_MAX_SIZE = 100
 
     const formSchema = z.object({
         host_type: z.string().min(2, {
@@ -98,19 +73,14 @@ const MailerForm = () => {
         from_email: z.string().min(2, {
           message: "Text must be at least 2 characters.",
         }).refine((value) => value && value?.trim().length >= 2, {message: "Invalid data."}),
-        emails: isSingleEmail ?
-        typeof window !== "undefined" ?
-        z.instanceof(FileList, {message: ""}).refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).refine((files) => AcceptedTypes.includes(files?.[0].type), {message: "Only csv, xlsx, txt accepted"}).optional()
-        :
-        z.any().refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).refine((files) => files?.[0].type === "text/plain", {message: "Only txt accepted"}).optional()
-        :
+        emails: 
         z.string({required_error: ""}).refine(() => acceptedEmails!.length > 0, {message: "No email added."}),
         subject: z.string().min(2, {
           message: "Subject must be at least 2 characters.",
         }).optional().refine((value) => value && value?.trim().length >= 2, {message: "Invalid data."}),
         text: z.string().optional(),
         html: z.string().min(4, {
-          message: "Html must be at least 2 characters.",
+          message: "Content must be at least 2 characters.",
         }).refine((value) => value && value?.trim().length >= 2, {message: "Too short."}),
         attachments: typeof window !== "undefined" ?
         z.instanceof(FileList, {message: ""}).refine((files) => files?.[0]?.size <= 1024 * 1024 * 5, {message: "File max size is 5MB"}).optional()
@@ -148,34 +118,40 @@ const MailerForm = () => {
             },
           })
 
-          const handleEmailOnchangeArrayFile = async (emailFile: any) => {
-            const  emailArray = await convertEmailsToArray(emailFile)
-            setAcceptedEmails(emailArray)
+          const handleAdditionOfEmails = (emailArray: string[]) => {
+            if(acceptedEmails && acceptedEmails?.length < EMAIL_MAX_SIZE){
+              const remainingEmails = EMAIL_MAX_SIZE - acceptedEmails?.length
+              const filteredEmailArray = emailArray.slice(0,remainingEmails).filter((email:string, index: number) =>emailRegExp.test(email) && !acceptedEmails?.includes(email) && emailArray.indexOf(email) === index);
+              if (filteredEmailArray.length > 0){
+                setAcceptedEmails((prev)=> [...(prev as string[]), ...filteredEmailArray])
+                toast({
+                  description: `Emails added`,
+                  variant: "updated"
+              })
+              }
+            }else{
+              toast({
+                description: `Only ${EMAIL_MAX_SIZE} emails per batch`,
+                variant: "destructive"
+            })
+            }
+
           }
 
-          const EMAIL_MAX_SIZE = 100
+          const handleEmailOnchangeArrayFile = async (emailFile: any) => {
+            const  emailArray = await convertEmailsToArray(emailFile)
+            handleAdditionOfEmails(emailArray as string[])
+        }
+
           const handleEmailInput = async (email: any) => {
             const  emailArray = email.split(/[\s,]+/)
             if(emailArray.length <= 1){
               const trimmedEmail = email.trim();
               setCurrentInput(trimmedEmail)
             }else{
-              if(acceptedEmails && acceptedEmails?.length < EMAIL_MAX_SIZE){
-                const remainingEmails = EMAIL_MAX_SIZE - acceptedEmails?.length
-                const filteredEmailArray = emailArray.slice(0,remainingEmails).filter((email:string, index: number) =>emailRegExp.test(email) && !acceptedEmails?.includes(email) && emailArray.indexOf(email) === index);
-                if (filteredEmailArray.length > 0){
-                  for(const filteredEmail of filteredEmailArray){
-                    setAcceptedEmails((prev)=>[...(prev as string[]), filteredEmail])
-                  }
-                }
-              }else{
-                toast({
-                  description: `Only ${EMAIL_MAX_SIZE} emails per batch`,
-                  variant: "destructive"
-              })
-              }
-            }
+              handleAdditionOfEmails(emailArray)
           }
+        }
 
           const removeEmail = (email:string) => {
             const filteredEmailArray = acceptedEmails?.filter((prev) => prev !== email)
@@ -266,16 +242,15 @@ const MailerForm = () => {
 
             </ol>
           )
-        
 
-
+          const isHTML = (value: string): boolean => {
+            const doc = new DOMParser().parseFromString(value, "text/html")
+            return Array.from(doc.body.childNodes).some((node) => node.nodeType === 1) // Check if there's at least one element node
+          }
         
           async function onSubmit(data: z.infer<typeof formSchema>) {
             const  attachmentArray = convertAttachmentToArray(data.attachments)
-            console.log('data', data)
-            
 
-            // Prepare JSON payload
             const payload = {
               host_type: data.host_type.toLocaleUpperCase(),
               smtp_host: data.host_type === "OTHER" ? getSmtpHost(data.username) : undefined,
@@ -291,7 +266,6 @@ const MailerForm = () => {
               reply_to: data.reply_to || undefined,
             };
 
-            console.log("payload", payload)
             try{
             setIsLoading(true)
             const response = await axios.post("https://api.mailer.xnyder.com/send/multiple", payload, {
@@ -300,16 +274,13 @@ const MailerForm = () => {
                 "mailer-access-key": "d8b40bda-9193-4ac8-b7cf-82d2c09ed7c1",
                 },
             });
-        
-            // Handle successful response
-            console.log("File uploaded successfully:", response.data);
+
             toast({
                 description: "Sent successfully!",
                 variant: "success"
             })
-
-        
-
+            form.reset()
+            setAcceptedEmails([])
             }catch(error:any){
             if (error.message === "Network Error") {
                 console.log("network: ", error.message)
@@ -345,7 +316,7 @@ const MailerForm = () => {
             })
                 
             }
-            console.log("error", error)
+            
             }finally{
             setIsLoading(false)
             }
@@ -355,7 +326,7 @@ const MailerForm = () => {
     <section className='relative'>
          <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} onKeyDown={handlePrematureFormSubmission} className="space-y-4 pt-6 flex md:flex-nowrap flex-wrap md:pt-7">
-                <span onClick={() => setIsTourOpen(true)} className='mt-24 border bg-white shadow w-fit h-fit py-2 px-4 ml-2 cursor-pointer md:sticky top-24'>Take Tour</span>
+                {/* <span onClick={() => setIsTourOpen(true)} className='mt-24 border bg-white shadow w-fit h-fit py-2 px-4 ml-2 cursor-pointer md:sticky top-24'>Take Tour</span> */}
 
                 <div className='bg-white mt-24 py-5 md:max-w-[36rem] w-full mx-auto p-4 md:rounded-2xl md:!sticky h-fit top-28 md:flex-1'>
                   
@@ -374,16 +345,25 @@ const MailerForm = () => {
                         )}
                     />
                   <div className='relative'>
-                    {/* <div className='flex justify-center w-fit items-center gap-2 pb-1 absolute right-4 top-4' id='emails-toggle'>
-                        <Switch checked={isSingleEmail}  onCheckedChange={()=>setIsSingleEmail(!isSingleEmail)}/>
-                        <HoverCard>
-                          <HoverCardTrigger><Info color='red' className='cursor-pointer'/></HoverCardTrigger>
-                          <HoverCardContent>
-                            You can also separate multiple emails with a comma, else simply add a file.
-                          </HoverCardContent>
-                        </HoverCard>
-                        
-                        </div> */}
+                  <div className="flex justify-center w-fit items-center gap-2 pb-1 absolute right-4 top-5" id="emails-toggle">
+                      <div className="relative pr-2" >
+                        <label htmlFor="file-input" className="cursor-pointer">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                                <Paperclip size={18}/>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Add your .csv, .xlsx, .txt file and watch us filter valid emails.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        </label> 
+                        <Input type="file" id="file-input" className="hidden" accept='.csv, .xlsx, .txt'  onChange={(e) => {handleEmailOnchangeArrayFile(e.target.files)}} />
+                      </div>
+                    </div>
+
                         
                     <FormField
                       control={form.control}
@@ -395,15 +375,6 @@ const MailerForm = () => {
                               Recipients:
                             </FormLabel>
                               <FormControl>
-                                {/* {isSingleEmail ?
-                                <div className='w-full pr-20'>
-                                <Input type={'file'} ref={field.ref} accept='.csv, .xlsx, .txt'  onChange={(e) => {field.onChange(e.target.files), handleEmailOnchangeArrayFile(e.target.files)}} className={`file:bg-violet-50 file:text-violet-700 rounded-md hover:file:bg-violet-100 ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-none bg-white shadow-none`}/>
-                                </div>
-                                :
-                                <div className='w-full pr-20'>
-                                <Input type="text" placeholder="receiver@gmail.com" ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailOnchangeArrayText(e.target.value)}} className={`ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
-                                </div>
-                                } */}
                                 <div className='w-full pr-5 flex items-center px-2 py-1 gap-2 flex-wrap overflow-auto no-scrollbar'>
                                     {renderEmails()}
                                     <Input type="text" value={currentInput} placeholder="receiver@gmail.com" onKeyDown={handleKeyPress} ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailInput(e.target.value)}} className={`ring-offset-transparent flex-1 focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
@@ -452,20 +423,40 @@ const MailerForm = () => {
                     name="html"
                     render={({ field }) => (
                       <FormItem id='html' className='w-full'>
-                        {/* <FormLabel>Type "/" for contents to start writing...</FormLabel> */}
                         <FormControl>
                           <Editor {...field} givenClass={`${form.control._formState.errors.html && "border-b-red-500 !border-b-2"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-b rounded-none mt-4 px-2 list-inside`}/>
-                          
-                          {/* <Textarea placeholder="Type here..." {...field} rows={12} className={`${form.control._formState.errors.html && "border-b-red-500 !border-b-2"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-b rounded-none mt-4 px-2`}/> */}
                         </FormControl>
-                        <FormDescription>
-                          The content of the email.
-                        </FormDescription>
+                        <div className='flex justify-between'>
+                          <FormDescription>
+                            The content of the email.
+                          </FormDescription>
+                          {field.value.trim().length > 1 &&
+                              <Dialog>
+                              <DialogTrigger asChild>
+                                      <Button type='button' className='xynder-bg-color'>Preview</Button>
+                              </DialogTrigger>
+                              <DialogContent className='h-[35rem] px-2 text-wrap overflow-y-auto overflow-x-hidden no-scrollbar'>
+                                <DialogHeader className='space-y-5'>
+                                  <DialogTitle className='text-left text-2xl'></DialogTitle>
+                                  <DialogDescription asChild className='space-y-2'>
+                                    {isHTML(field.value) ? (
+                                      <div dangerouslySetInnerHTML={{__html:field.value}} className='formatted-html'/>
+                                    ):
+                                    <pre className='formatted-text whitespace-pre-wrap'>
+                                      {field.value}
+                                    </pre>
+                                    }
+                                  </DialogDescription>
+                                </DialogHeader>
+                              </DialogContent>
+                            </Dialog>
+                          }
+
+                        </div>
                         <FormMessage/>
                       </FormItem>
                     )}
                   />
-                  {/* <RichEditor/> */}
                 </div>
                 <div className='md:right-0 !pt-20 pb-6 px-3 md:!w-80 w-full bg-white space-y-5'>
                     <h2 className='text-lg pb-1 font-bold'>Configuration</h2>
@@ -518,7 +509,7 @@ const MailerForm = () => {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="GOOGLE">Google</SelectItem>
-                          <SelectItem value="OTHER">My server</SelectItem>
+                          <SelectItem value="OTHER">My Server</SelectItem>
                         </SelectContent>
                       </Select>
                         <FormDescription>
@@ -560,7 +551,7 @@ const MailerForm = () => {
                       </FormItem>
                     )}
                   />
-                   <FormField
+                   {/* <FormField
                     control={form.control}
                     name="attachments"
                     render={({ field }) => (
@@ -574,7 +565,7 @@ const MailerForm = () => {
                         <FormMessage/>
                       </FormItem>
                     )}
-                  />
+                  /> */}
                 
                     <Button type="submit" className='bg-blue-600 w-full py-3 font-bold' disabled={isLoading}>{isLoading ? <span className='mx-auto'><Loader2 className='animate-spin'/></span>: "Send"} </Button>
 
