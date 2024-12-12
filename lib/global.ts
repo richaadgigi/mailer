@@ -166,9 +166,16 @@ export const convertAttachmentToArray = (attachments:any) => {
     return attachmentArray
 }
 
-export const getSmtpHost = (email: string) => {
-  const smtphost = email.split('@')[1]
-  return smtphost
+export const getSmtpHost = (username: string, from_email: string) => {
+  const username_smtp = username.split('@')[1] 
+  const from_email_smtp = from_email.split('@')[1] 
+  if(from_email_smtp){
+    return from_email_smtp.toLocaleLowerCase()
+  }else{
+    return username_smtp.toLocaleLowerCase()
+  }
+
+  
 }
  
 export const isEmailValidated = (email: string) => {

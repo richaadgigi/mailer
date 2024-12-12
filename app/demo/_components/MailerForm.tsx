@@ -39,7 +39,7 @@ import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { ChevronDown, Eye, EyeOff, Loader2, Paperclip, X } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff, File, Loader2, Paperclip, X } from 'lucide-react';
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast"
 import { convertAttachmentToArray, convertEmailsToArray, emailRegExp, getSmtpHost, isEmailValidated, steps } from '@/lib/global'
@@ -57,6 +57,7 @@ const MailerForm = () => {
   const [acceptedEmails, setAcceptedEmails] = React.useState<Array<string> | undefined>([])
   const [isTourOpen, setIsTourOpen] = React.useState(false);
   const [currentInput, setCurrentInput] = React.useState<string>("");
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = React.useState<boolean>(false);
   const EMAIL_MAX_SIZE = 100
 
     const formSchema = z.object({
@@ -90,15 +91,6 @@ const MailerForm = () => {
         sender: z.string().optional(),
         reply_to: z.string().optional().refine((value) =>  !value || emailRegExp.test(value), {message: "Reply-to must be a valid email address."}),
       })
-      // .superRefine((data, ctx) => {
-      //   if (data.host_type.toLocaleLowerCase() === "other" && !data.smtp_host?.trim()) {
-      //     ctx.addIssue({
-      //       code: z.ZodIssueCode.custom,
-      //       path: ["smtp_host"], 
-      //       message: "Smtp host is required when host type is 'other'",
-      //     })
-      //   }
-      //   })
 
         const form = useForm<z.infer<typeof formSchema>>({
             resolver: zodResolver(formSchema),
@@ -253,7 +245,7 @@ const MailerForm = () => {
 
             const payload = {
               host_type: data.host_type.toLocaleUpperCase(),
-              smtp_host: data.host_type === "OTHER" ? getSmtpHost(data.username) : undefined,
+              smtp_host: data.host_type === "OTHER" ? getSmtpHost(data.username, data.from_email) : undefined,
               username: data.username,
               password: data.password,
               from_email: data.from_email,
@@ -265,6 +257,7 @@ const MailerForm = () => {
               sender: data.sender || undefined,
               reply_to: data.reply_to || undefined,
             };
+            console.log("payload", payload)
 
             try{
             setIsLoading(true)
@@ -351,7 +344,7 @@ const MailerForm = () => {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                                <Paperclip size={18}/>
+                                <File size={18}/>
                             </TooltipTrigger>
                             <TooltipContent>
                               <p>Add your .csv, .xlsx, .txt file and watch us filter valid emails.</p>
@@ -487,8 +480,8 @@ const MailerForm = () => {
                             <EyeOff onClick={()=> setIsPasswordShown(false)}/>
                             :
                             <Eye onClick={()=> setIsPasswordShown(true)}/>
-
-                            }
+                            
+                          }
                         </div>
                         <FormDescription>
                             The password for authentication.
@@ -508,7 +501,7 @@ const MailerForm = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="GOOGLE">Google</SelectItem>
+                          <SelectItem onSelect={()=> {setIsGoogleModalOpen(true), console.log(isGoogleModalOpen)}} value="GOOGLE">Google</SelectItem>
                           <SelectItem value="OTHER">My Server</SelectItem>
                         </SelectContent>
                       </Select>
@@ -518,6 +511,18 @@ const MailerForm = () => {
                       </FormItem>
                     )}
                   />
+                  <Dialog open={isGoogleModalOpen} onOpenChange={()=> setIsGoogleModalOpen(false)}>
+                      <DialogTrigger>
+                      </DialogTrigger>
+                      <DialogContent className='h-[35rem] px-2 text-wrap overflow-y-auto overflow-x-hidden no-scrollbar'>
+                        <DialogHeader className='space-y-5'>
+                          <DialogTitle className='text-left text-2xl'></DialogTitle>
+                          <DialogDescription asChild className='space-y-2'>
+                            
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                  </Dialog>
                   
                 <hr className='h-[0.1rem] my-2' color='black'/>
                 <h3 className='text-center '>Additional Options</h3>

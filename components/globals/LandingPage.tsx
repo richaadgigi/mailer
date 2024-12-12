@@ -22,6 +22,8 @@ const LandingPage = () => {
               <Link href={`/demo`} className='md:mx-0 mx-auto w-fit delay-200 '>
                   <Button className='xynder-bg-color hover:w-60 w-56 py-7 pr-2 transition-all duration-500 delay-50 rounded-full  text-center'><span className='text-center w-full font-bold text-lg'> Try it out </span> <span className='bg-white p-3 rounded-full xynder-text-color border ml-auto font-bold'><ArrowRight className="animate-pulse mx-auto w-fit delay-100"/></span></Button>
               </Link>
+              <Link className='mt-4 text-[#ff6b37] text-sm font-semibold underline-offset-4 underline' target='_blank' href={'https://documenter.getpostman.com/view/16645752/2sA3rxpD5v'}>Click to see our full documentation</Link>
+
         </div>
         <RetroGrid />
     </section>
