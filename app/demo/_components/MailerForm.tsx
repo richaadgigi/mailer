@@ -350,7 +350,7 @@ const MailerForm = () => {
                         <label htmlFor="file-input" className="cursor-pointer">
                         <TooltipProvider>
                           <Tooltip>
-                            <TooltipTrigger>
+                            <TooltipTrigger asChild>
                                 <Paperclip size={18}/>
                             </TooltipTrigger>
                             <TooltipContent>
