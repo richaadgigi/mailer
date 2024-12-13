@@ -18,7 +18,7 @@ export const steps = [
   {
     id: 'email-icon-step',
     title: 'Toggle',
-    text: 'Switch and insert a - .txt, .csv, .xlsx - file. We filter the emails in it.',
+    text: 'Insert a - .txt, .csv, .xlsx - file. We filter the emails in it.',
     attachTo: { element: '#emails-toggle', on: "bottom" },
   },
   {
@@ -51,24 +51,24 @@ export const steps = [
     text: 'Choose my server if you prefer to use your server.',
     attachTo: { element: '#host', on: "top" },
   },
-  {
-    id: 'sender-step',
-    title: 'Sender',
-    text: 'The name that will appear as the sender.',
-    attachTo: { element: '#sender', on: "top" },
-  },
-  {
-    id: 'reply-step',
-    title: 'Reply',
-    text: 'An accessible email that is easily reached.',
-    attachTo: { element: '#reply_to', on: "top" },
-  },
-  {
-    id: 'attachment-step',
-    title: 'Documents',
-    text: 'Documents can be attached here.',
-    attachTo: { element: '#attachments', on: "top" },
-  },
+  // {
+  //   id: 'sender-step',
+  //   title: 'Sender',
+  //   text: 'The name that will appear as the sender.',
+  //   attachTo: { element: '#sender', on: "top" },
+  // },
+  // {
+  //   id: 'reply-step',
+  //   title: 'Reply',
+  //   text: 'An accessible email that is easily reached.',
+  //   attachTo: { element: '#reply_to', on: "top" },
+  // },
+  // {
+  //   id: 'attachment-step',
+  //   title: 'Documents',
+  //   text: 'Documents can be attached here.',
+  //   attachTo: { element: '#attachments', on: "top" },
+  // },
 ];
 
 // export const emailRegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/

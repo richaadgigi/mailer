@@ -61,6 +61,8 @@ const MailerForm = () => {
   const [isTourOpen, setIsTourOpen] = React.useState(false);
   const [currentInput, setCurrentInput] = React.useState<string>("");
   const [isGoogleModalOpen, setIsGoogleModalOpen] = React.useState<boolean>(false);
+  const [isSuccessfulMailModalOpen, setIsSuccessfulMailModalOpen] = React.useState<boolean>(false)
+  const [emailsSent, setEmailsSent] = React.useState<Array<{accepted: any[], rejected: any[], messageId?: string, response?: string}>>([])
   const EMAIL_MAX_SIZE = 100
 
     const formSchema = z.object({
@@ -221,8 +223,9 @@ const MailerForm = () => {
                     className={`flex items-center rounded-full border px-2 py-1 mr-2 ${
                       emailRegExp.test(email) ? "border-gray-300" : "border-red-500 border-dotted"
                     }`}
+                    title={email}
                   >
-                    {email}
+                    {email.length > 10 ? email.slice(0,5) + "...": email}
                     <button
                       type="button"
                       className="ml-2 text-red-500 hover:text-red-700"
@@ -272,9 +275,12 @@ const MailerForm = () => {
             });
 
             toast({
-                description: "Sent successfully!",
+                description: `${response.data.message}`,
                 variant: "success"
             })
+            console.log("response", response)
+            setIsSuccessfulMailModalOpen(true)
+            setEmailsSent(response.data.data)
             form.reset()
             setAcceptedEmails([])
             }catch(error:any){
@@ -321,10 +327,10 @@ const MailerForm = () => {
   return (
     <section className='relative'>
          <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} onKeyDown={handlePrematureFormSubmission} className="space-y-4 pt-6 flex md:flex-nowrap flex-wrap md:pt-7">
-                {/* <span onClick={() => setIsTourOpen(true)} className='mt-24 border bg-white shadow w-fit h-fit py-2 px-4 ml-2 cursor-pointer md:sticky top-24'>Take Tour</span> */}
+              <form onSubmit={form.handleSubmit(onSubmit)} onKeyDown={handlePrematureFormSubmission} className="space-y-4 pt-20 flex md:flex-nowrap flex-wrap md:pt-16 ">
+                {/* <span onClick={() => setIsTourOpen(true)} className=' border bg-white shadow w-fit h-fit py-2 px-4 ml-2 cursor-pointer md:sticky top-24 md:block hidden'>Take Tour</span> */}
 
-                <div className='bg-white mt-24 py-5 md:max-w-[36rem] w-full mx-auto p-4 md:rounded-2xl md:!sticky h-fit top-28 md:flex-1'>
+                <div className='bg-white mt-5 py-5 md:max-w-[36rem] w-full mx-auto p-4 md:rounded-2xl md:!sticky h-fit top-28 md:flex-1'>
                   
                     <FormField
                         control={form.control}
@@ -341,26 +347,7 @@ const MailerForm = () => {
                         )}
                     />
                   <div className='relative'>
-                  <div className="flex justify-center w-fit items-center gap-2 pb-1 absolute right-4 top-5" id="emails-toggle">
-                      <div className="relative pr-2" >
-                        <label htmlFor="file-input" className="cursor-pointer">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild className=''>
-                                <File size={18}/>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Add your .csv, .xlsx, .txt file and watch us filter valid emails.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-
-                        </label> 
-                        <Input type="file" id="file-input" className="hidden" accept='.csv, .xlsx, .txt'  onChange={(e) => {handleEmailOnchangeArrayFile(e.target.files)}} />
-                      </div>
-                    </div>
-
-                        
+            
                     <FormField
                       control={form.control}
                       name="emails"
@@ -386,6 +373,24 @@ const MailerForm = () => {
                                       <span className='!break-all max-w-full'>{currentInput}</span>
                                     </div>
                                   )}
+                                  <div className="flex justify-center w-fit items-center gap-2 pb-1 right-4 top-5" id="emails-toggle">
+                                      <div className="relative pr-2" >
+                                        <label htmlFor="file-input" className="cursor-pointer">
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild className=''>
+                                                <File size={18}/>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Add your .csv, .xlsx, .txt file and watch us filter valid emails.</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+
+                                        </label> 
+                                        <Input type="file" id="file-input" className="hidden" accept='.csv, .xlsx, .txt'  onChange={(e) => {handleEmailOnchangeArrayFile(e.target.files)}} />
+                                      </div>
+                                    </div>
 
                                    
                                 </div>
@@ -590,6 +595,44 @@ const MailerForm = () => {
                 </div>
               </form>
           </Form>
+          {isSuccessfulMailModalOpen && 
+            <Dialog open={isSuccessfulMailModalOpen} onOpenChange={()=> setIsSuccessfulMailModalOpen(false)}>
+                      <DialogTrigger>
+                      </DialogTrigger>
+                      <DialogContent className='max-h-[40rem] max-w-96 text-wrap overflow-y-auto overflow-x-hidden no-scrollbar'>
+                        <DialogHeader className='space-y-5 mt-10'>
+                          <DialogTitle className='text-left text-sm flex justify-between items-center'>
+                            <span>Total Accepted: <span className='rounded-full px-2 py-1 text-xs bg-green-500 text-white'>{emailsSent.reduce((acc, curr) => acc + curr.accepted.length, 0)}</span></span>
+                            <span>Total Rejected: <span className='rounded-full px-2 py-1 text-xs bg-red-500 text-white'>{emailsSent.reduce((acc, curr) => acc + curr.rejected.length, 0)}</span></span>
+                            </DialogTitle>
+                          <hr className='py-1'/>
+                          <DialogDescription asChild className='space-y-2'>
+                            <div className='flex justify-between items-center text-xs gap-x-5 text-left text-wrap px-2'>
+                                <ul  className='border-r pr-1 basis-1/2 space-y-2' style={{listStyle: "decimal"}}>
+                                  {emailsSent.map((email, index) => 
+                                    email.accepted.map((acceptedEmail: string, i: number)=> (
+                                      <li key={`accepted-${index}-${i}`} className='break-all cursor-pointer' title={acceptedEmail}>{acceptedEmail && acceptedEmail.length > 20 ? acceptedEmail.slice(0,20) + "..." : acceptedEmail}</li>
+
+                                    ))
+                                  ) as any[]}
+
+                                </ul>
+                                <ul   className='text-wrap basis-1/2 pl-3 space-y-2' style={{listStyle: "decimal"}}>
+                                  {emailsSent.map((email, index) => (
+                                    email.rejected.map((rejectedEmail: string, i: number) => (
+                                      <li key={`rejected-${index}-${i}`} className='break-all cursor-pointer' title={rejectedEmail}>{rejectedEmail && rejectedEmail.length > 20 ? rejectedEmail.slice(0,20) + "..." : rejectedEmail}</li>
+
+                                    ))
+                                  ))}
+                                  
+                                </ul>
+                            </div>
+                            
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+          </Dialog>
+          }
       <AppTour steps={steps} isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
     </section>
   )
