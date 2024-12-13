@@ -11,7 +11,7 @@ import RetroGrid from "@/components/ui/retro-grid";
 const LandingPage = () => {
   return (
     <section  className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-background">
-        <div className='flex flex-col z-10 justify-center items-center md:gap-3 gap-4 md:px-12 px-6 pt-36 pb-5 text-center'>
+        <div className='flex flex-col z-10 justify-center items-center md:gap-3 gap-4 md:px-12 px-6 pt-40 pb-20 text-center'>
             {/* <div className='w-fit mb-4'>
                 <Link href="" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=467244&theme=neutral" alt="Mailer - Effortless&#0032;mailing&#0032;service&#0044;&#0032;Instant&#0032;Results | Product Hunt" style={{width: '250px', height: '54px'}} width="250" height="54" /></Link>
             </div> */}
@@ -22,7 +22,7 @@ const LandingPage = () => {
               <Link href={`/demo`} className='md:mx-0 mx-auto w-fit delay-200 '>
                   <Button className='xynder-bg-color hover:w-60 w-56 py-7 pr-2 transition-all duration-500 delay-50 rounded-full  text-center'><span className='text-center w-full font-bold text-lg'> Try it out </span> <span className='bg-white p-3 rounded-full xynder-text-color border ml-auto font-bold'><ArrowRight className="animate-pulse mx-auto w-fit delay-100"/></span></Button>
               </Link>
-              <Link className='mt-4 text-[#ff6b37] text-sm font-semibold underline-offset-4 underline' target='_blank' href={'https://documenter.getpostman.com/view/16645752/2sA3rxpD5v'}>Click to see our full documentation</Link>
+              <Link className='mt-4  text-[#ff6b37] text-sm font-semibold underline-offset-4 underline' target='_blank' href={'https://documenter.getpostman.com/view/16645752/2sA3rxpD5v'}>Click to see our full documentation</Link>
 
         </div>
         <RetroGrid />

@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Nav from "@/components/globals/Nav";
+import {Head} from "next/document";
+
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -36,8 +38,32 @@ const satoshi = localFont({
 })
 
 export const metadata: Metadata = {
-  title: "Mailer - Effortless mailing service to your clients.",
-  description: "Mailer is an effortless mailing service software designed by xynder to assist businesses post mail to your clients..",
+  title: "Mailer by Xnyder | Streamlined Bulk Emailing for Custom Campaigns",
+  description: "Send personalized emails effortlessly with Mailer by Xnyder. Manage bulk campaigns using your custom email address, ensuring professional and effective communication for businesses of all sizes.",
+  manifest: "/site.webmanifest",
+  keywords: 'Mailer, Bulk Emails, Fast Emailing service, Emails, Xynder, ',
+  icons: {
+    apple: [
+      {
+        url: '/apple-touch-icon.png',
+      },
+      {
+        url: '/android-chrome-512x512.png',
+        sizes: '512x512'
+      },
+      {
+        url: '/android-chrome-192x192.png',
+        sizes: '192x192'
+      },
+    ],
+    icon: [
+      {
+        sizes: '32x32',
+        url: '/favicon-32x32.png',
+        type: 'image/x-icon'
+    }
+  ]
+  }
 };
 
 export default function RootLayout({
