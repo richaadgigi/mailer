@@ -53,7 +53,6 @@ import Image from 'next/image'
 const AcceptedTypes = ['text/csv', 'text/xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain']
 
 const MailerForm = () => {
-  const [isSingleEmail, setIsSingleEmail] = React.useState<boolean>(false)
   const [ isPasswordShown, setIsPasswordShown ] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const { toast } = useToast()
@@ -263,7 +262,6 @@ const MailerForm = () => {
               sender: data.sender || undefined,
               reply_to: data.reply_to || undefined,
             };
-            console.log("payload", payload)
 
             try{
             setIsLoading(true)
@@ -278,7 +276,6 @@ const MailerForm = () => {
                 description: `${response.data.message}`,
                 variant: "success"
             })
-            console.log("response", response)
             setIsSuccessfulMailModalOpen(true)
             setEmailsSent(response.data.data)
             form.reset()
