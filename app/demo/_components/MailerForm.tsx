@@ -22,6 +22,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -39,12 +40,14 @@ import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { ChevronDown, Eye, EyeOff, File, Loader2, Paperclip, X } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff, File, Info, Loader2, Paperclip, X } from 'lucide-react';
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast"
 import { convertAttachmentToArray, convertEmailsToArray, emailRegExp, getSmtpHost, isEmailValidated, steps } from '@/lib/global'
 import AppTour from '@/hooks/Tour'
 import Editor from '@/components/editor/advanced-editor'
+import Link from 'next/link'
+import Image from 'next/image'
 
 
 const AcceptedTypes = ['text/csv', 'text/xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain']
@@ -451,7 +454,7 @@ const MailerForm = () => {
                     )}
                   />
                 </div>
-                <div className='md:right-0 !pt-20 pb-6 px-3 md:!w-80 w-full bg-white space-y-5'>
+                <div className='md:right-0 !pt-20 pb-6 px-3 md:!w-80 w-full bg-white space-y-5 relative'>
                     <h2 className='text-lg pb-1 font-bold'>Configuration</h2>
                     <FormField
                         control={form.control}
@@ -494,14 +497,14 @@ const MailerForm = () => {
                     name="host_type"
                     render={({ field }) => (
                       <FormItem className='w-full'>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={(value)=> {field.onChange(value); if(value === "GOOGLE") setIsGoogleModalOpen(true)}} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger id='host' className={`${form.control._formState.errors.host_type && "border-b-red-500"} ring-offset-transparent focus-visible:!ring-offset-0 focus-visible:!ring-0 border-b-2 bg-white shadow py-6 text-muted-foreground`}>
                             <SelectValue placeholder="Send message with?" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem onSelect={()=> {setIsGoogleModalOpen(true), console.log(isGoogleModalOpen)}} value="GOOGLE">Google</SelectItem>
+                          <SelectItem value="GOOGLE">Google</SelectItem>
                           <SelectItem value="OTHER">My Server</SelectItem>
                         </SelectContent>
                       </Select>
@@ -516,15 +519,25 @@ const MailerForm = () => {
                       </DialogTrigger>
                       <DialogContent className='h-[35rem] px-2 text-wrap overflow-y-auto overflow-x-hidden no-scrollbar'>
                         <DialogHeader className='space-y-5'>
-                          <DialogTitle className='text-left text-2xl'></DialogTitle>
-                          <DialogDescription asChild className='space-y-2'>
+                          <DialogTitle className='text-left text-2xl w-fit mx-auto my-10'><Info size={80} className='text-amber-500'/></DialogTitle>
+                          <DialogDescription asChild className='px-5'>
+                            <div className='space-y-3 text-center'>
+                              <h2 className='!text-3xl '>This is a reminder.</h2>
+                              <p className='text-sm w-96 mx-auto'>Your google password is a 16-digit app passcode. App passwords can only be used with accounts that have 2-Step Verification turned on.</p>
+                              <Image src={`/pointing-down.svg`} width={100} height={100} alt="Pointing down" className='animate-bounce delay-100 transition-all w-20 h-20 mx-auto'/>
+
+                            </div>
                             
                           </DialogDescription>
                         </DialogHeader>
+                        <DialogFooter>
+                              <Link href={`https://support.google.com/mail/answer/185833?hl=en`} target='_blank' className='xynder-bg-color w-96 mx-auto py-4 h-fit  text-center text-white hover:bg-blue-600 transition-all duration-200'>Get App Password</Link>
+
+                        </DialogFooter>
                       </DialogContent>
                   </Dialog>
                   
-                <hr className='h-[0.1rem] my-2' color='black'/>
+                {/* <hr className='h-[0.1rem] my-2' color='black'/>
                 <h3 className='text-center '>Additional Options</h3>
                 <FormField
                     control={form.control}
@@ -555,7 +568,7 @@ const MailerForm = () => {
                         <FormMessage/>
                       </FormItem>
                     )}
-                  />
+                  /> */}
                    {/* <FormField
                     control={form.control}
                     name="attachments"
@@ -572,7 +585,7 @@ const MailerForm = () => {
                     )}
                   /> */}
                 
-                    <Button type="submit" className='bg-blue-600 w-full py-3 font-bold' disabled={isLoading}>{isLoading ? <span className='mx-auto'><Loader2 className='animate-spin'/></span>: "Send"} </Button>
+                    <Button type="submit" className='bg-blue-600 w-full py-3 font-bold  ' disabled={isLoading}>{isLoading ? <span className='mx-auto'><Loader2 className='animate-spin'/></span>: "Send"} </Button>
 
                 </div>
               </form>

@@ -171,11 +171,11 @@ export const getSmtpHost = (username: string, from_email: string) => {
   const from_email_smtp = from_email.split('@')[1] 
   if(from_email_smtp){
     return from_email_smtp.toLocaleLowerCase()
-  }else{
+  }else if (username_smtp){
     return username_smtp.toLocaleLowerCase()
+  }else{
+    return "gmail.com"
   }
-
-  
 }
  
 export const isEmailValidated = (email: string) => {
