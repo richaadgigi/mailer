@@ -199,7 +199,7 @@ const MailerForm = () => {
                         </span>
 
                     </DialogTrigger>
-                    <DialogContent className='max-h-[40rem] max-w-96 text-wrap overflow-y-auto overflow-x-hidden no-scrollbar'>
+                    <DialogContent className='max-h-[40rem] max-w-[30rem] text-wrap overflow-y-auto overflow-x-hidden no-scrollbar'>
                       <DialogHeader className='space-y-5'>
                         <DialogTitle className='text-left text-2xl'><span className='border rounded-full mr-1 mb-2 px-4 py-2 text-sm xynder-bg-color text-white'>{acceptedEmails.length}</span>Accepted Emails</DialogTitle>
                         <hr className='py-1'/>
@@ -208,20 +208,38 @@ const MailerForm = () => {
                             {/* Odd-indexed emails for large screens */}
                             <div className="md:w-1/2 w-full">
                               {oddEmails.map((email, index) => (
-                                <span key={`odd-${email}-${index}`} className="flex justify-between text-sm text-black">
-                                  <li title={email} className="!break-all max-w-full text-left list-inside">{email && email.length > 20 ? email.slice(0,20) + "..." : email}</li>
-                                  <X color="red" onClick={() => removeEmail(email)} className="cursor-pointer" />
-                                </span>
+                                <TooltipProvider delayDuration={0} key={`odd-${email}-${index}`} >
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="flex justify-between text-sm text-black">
+                                            <li className="!break-all max-w-full text-left list-inside">{email && email.length > 20 ? email.slice(0,15) + "..." : email}</li>
+                                            <X color="red" onClick={() => removeEmail(email)} className="cursor-pointer" />
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>{email}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
                               ))}
                             </div>
 
                             {/* Even-indexed emails for large screens */}
                             <div className="md:w-1/2 w-full">
                               {evenEmails.map((email, index) => (
-                                <span key={`even-${email}-${index}`} className="flex justify-between text-sm text-black">
-                                  <li title={email} className="!break-all max-w-full text-left list-inside">{email && email.length > 20 ? email.slice(0,20) : email}</li>
-                                  <X color="red" onClick={() => removeEmail(email)} className="cursor-pointer" />
-                                </span>
+                                <TooltipProvider delayDuration={0} key={`odd-${email}-${index}`} >
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="flex justify-between text-sm text-black">
+                                      <li className="!break-all max-w-full text-left list-inside">{email && email.length > 20 ? email.slice(0,15) + "..." : email}</li>
+                                      <X color="red" onClick={() => removeEmail(email)} className="cursor-pointer" />
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{email}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                               ))}
                             </div>   
                           </ul>
@@ -610,7 +628,7 @@ const MailerForm = () => {
             <Dialog open={isSuccessfulMailModalOpen} onOpenChange={()=> setIsSuccessfulMailModalOpen(false)}>
                       <DialogTrigger>
                       </DialogTrigger>
-                      <DialogContent className='max-h-[40rem] max-w-96 text-wrap overflow-y-auto overflow-x-hidden no-scrollbar'>
+                      <DialogContent className='max-h-[40rem] max-w-[30rem] text-wrap overflow-y-auto overflow-x-hidden no-scrollbar'>
                         <DialogHeader className='space-y-5 mt-10'>
                           <DialogTitle className='text-left text-sm flex justify-between items-center'>
                             <span>Total Accepted: <span className='rounded-full px-2 py-1 text-xs bg-green-500 text-white'>{emailsSent.reduce((acc, curr) => acc + curr.accepted.length, 0)}</span></span>
@@ -622,7 +640,16 @@ const MailerForm = () => {
                                 <ul  className='border-r pr-1 basis-1/2 space-y-2' style={{listStyle: "decimal"}}>
                                   {emailsSent.map((email, index) => 
                                     email.accepted.map((acceptedEmail: string, i: number)=> (
-                                      <li key={`accepted-${index}-${i}`} className='break-all cursor-pointer' title={acceptedEmail}>{acceptedEmail && acceptedEmail.length > 20 ? acceptedEmail.slice(0,20) + "..." : acceptedEmail}</li>
+                                      <TooltipProvider delayDuration={0} key={`accepted-${index}-${i}`} >
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <li  className='break-all cursor-pointer'>{acceptedEmail && acceptedEmail.length > 20 ? acceptedEmail.slice(0,20) + "..." : acceptedEmail}</li>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>{acceptedEmail}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
 
                                     ))
                                   ) }
@@ -631,7 +658,16 @@ const MailerForm = () => {
                                 <ul   className='text-wrap basis-1/2 pl-3 space-y-2' style={{listStyle: "decimal"}}>
                                   {emailsSent.map((email, index) => (
                                     email.rejected.map((rejectedEmail: string, i: number) => (
-                                      <li key={`rejected-${index}-${i}`} className='break-all cursor-pointer' title={rejectedEmail}>{rejectedEmail && rejectedEmail.length > 20 ? rejectedEmail.slice(0,20) + "..." : rejectedEmail}</li>
+                                      <TooltipProvider delayDuration={0} key={`rejected-${index}-${i}`} >
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <li className='break-all cursor-pointer'>{rejectedEmail && rejectedEmail.length > 20 ? rejectedEmail.slice(0,20) + "..." : rejectedEmail}</li>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>{rejectedEmail}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
 
                                     ))
                                   ))}
