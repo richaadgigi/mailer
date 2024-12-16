@@ -1,5 +1,7 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
   generateBuildId() {
     return Date.now().toString();
   },
@@ -11,7 +13,6 @@ const nextConfig = {
       }
     ]
   }
-
 };
 
 export default nextConfig;
