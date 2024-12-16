@@ -204,27 +204,27 @@ const MailerForm = () => {
                         <DialogTitle className='text-left text-2xl'><span className='border rounded-full mr-1 mb-2 px-4 py-2 text-sm xynder-bg-color text-white'>{acceptedEmails.length}</span>Accepted Emails</DialogTitle>
                         <hr className='py-1'/>
                         <DialogDescription asChild className=''>
-                        <ul style={{ listStyleType: "decimal" }} className="block md:flex items-start gap-x-4">
-                          {/* Odd-indexed emails for large screens */}
-                          <div className="md:w-1/2 w-full">
-                            {oddEmails.map((email, index) => (
-                              <span key={`odd-${email}-${index}`} className="flex justify-between text-sm text-black">
-                                <li className="!break-all max-w-full text-left list-inside">{email}</li>
-                                <X color="red" onClick={() => removeEmail(email)} className="cursor-pointer" />
-                              </span>
-                            ))}
-                          </div>
+                          <ul style={{"listStyleType": "decimal"}} className='md:flex block gap-2'>
+                            {/* Odd-indexed emails for large screens */}
+                            <div className="md:w-1/2 w-full">
+                              {oddEmails.map((email, index) => (
+                                <span key={`odd-${email}-${index}`} className="flex justify-between text-sm text-black">
+                                  <li title={email} className="!break-all max-w-full text-left list-inside">{email && email.length > 20 ? email.slice(0,20) + "..." : email}</li>
+                                  <X color="red" onClick={() => removeEmail(email)} className="cursor-pointer" />
+                                </span>
+                              ))}
+                            </div>
 
-                          {/* Even-indexed emails for large screens */}
-                          <div className="md:w-1/2 w-full">
-                            {evenEmails.map((email, index) => (
-                              <span key={`even-${email}-${index}`} className="flex justify-between text-sm text-black">
-                                <li className="!break-all max-w-full text-left list-inside">{email}</li>
-                                <X color="red" onClick={() => removeEmail(email)} className="cursor-pointer" />
-                              </span>
-                            ))}
-                          </div>
-                        </ul>
+                            {/* Even-indexed emails for large screens */}
+                            <div className="md:w-1/2 w-full">
+                              {evenEmails.map((email, index) => (
+                                <span key={`even-${email}-${index}`} className="flex justify-between text-sm text-black">
+                                  <li title={email} className="!break-all max-w-full text-left list-inside">{email && email.length > 20 ? email.slice(0,20) : email}</li>
+                                  <X color="red" onClick={() => removeEmail(email)} className="cursor-pointer" />
+                                </span>
+                              ))}
+                            </div>   
+                          </ul>
                         </DialogDescription>
                       </DialogHeader>
                     </DialogContent>
