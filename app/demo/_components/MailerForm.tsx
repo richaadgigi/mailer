@@ -324,10 +324,10 @@ const MailerForm = () => {
   return (
     <section className='relative'>
          <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} onKeyDown={handlePrematureFormSubmission} className="space-y-4 pt-20 flex md:flex-nowrap flex-wrap md:pt-16 ">
+              <form onSubmit={form.handleSubmit(onSubmit)} onKeyDown={handlePrematureFormSubmission} className="h-screen pt-20 justify-center items-center flex md:flex-nowrap flex-wrap md:pt-16 ">
                 {/* <span onClick={() => setIsTourOpen(true)} className=' border bg-white shadow w-fit h-fit py-2 px-4 ml-2 cursor-pointer md:sticky top-24 md:block hidden'>Take Tour</span> */}
 
-                <div className='bg-white mt-5 py-5 md:max-w-[36rem] w-full mx-auto p-4 md:rounded-2xl md:!sticky h-fit top-28 md:flex-1'>
+                <div className='bg-white py-5 md:max-w-[36rem] !my-auto w-full mx-auto p-4 md:rounded-2xl md:!sticky h-fit top-28 md:flex-1'>
                   
                     <FormField
                         control={form.control}
@@ -372,10 +372,10 @@ const MailerForm = () => {
                                   )}
                                   <div className="flex justify-center w-fit items-center gap-2 pb-1 right-4 top-5" id="emails-toggle">
                                       <div className="relative pr-2" >
-                                        <label htmlFor="file-input" className="cursor-pointer">
-                                        <TooltipProvider>
+                                        <label htmlFor="file-input" className="cursor-pointer" >
+                                        <TooltipProvider delayDuration={0}>
                                           <Tooltip>
-                                            <TooltipTrigger asChild className=''>
+                                            <TooltipTrigger asChild className='delay-0'>
                                                 <File size={18}/>
                                             </TooltipTrigger>
                                             <TooltipContent>
@@ -456,7 +456,7 @@ const MailerForm = () => {
                     )}
                   />
                 </div>
-                <div className='md:right-0 !pt-20 pb-6 px-3 md:!w-80 w-full bg-white space-y-5 relative'>
+                <div className='md:right-0 !pt-20 px-3 md:!w-80 w-full h-screen bg-white space-y-5 relative'>
                     <h2 className='text-lg pb-1 font-bold'>Configuration</h2>
                     <FormField
                         control={form.control}

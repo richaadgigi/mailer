@@ -3,7 +3,7 @@ import MailerForm from './_components/MailerForm'
 
 const DemoPage = () => {
   return (
-    <div>
+    <div className="">
         <MailerForm/>
     </div>
   )
