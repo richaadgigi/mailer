@@ -199,7 +199,7 @@ const MailerForm = () => {
                         </span>
 
                     </DialogTrigger>
-                    <DialogContent className='max-h-[40rem] max-w-[30rem] text-wrap overflow-y-auto overflow-x-hidden no-scrollbar'>
+                    <DialogContent className='max-h-[40rem] max-w-[50rem] text-wrap overflow-y-auto overflow-x-hidden no-scrollbar'>
                       <DialogHeader className='space-y-5'>
                         <DialogTitle className='text-left text-2xl'><span className='border rounded-full mr-1 mb-2 px-4 py-2 text-sm xynder-bg-color text-white'>{acceptedEmails.length}</span>Accepted Emails</DialogTitle>
                         <hr className='py-1'/>
@@ -212,7 +212,7 @@ const MailerForm = () => {
                                       <Tooltip>
                                         <TooltipTrigger asChild>
                                           <span className="flex justify-between text-sm text-black">
-                                            <li className="!break-all max-w-full text-left list-inside">{email && email.length > 20 ? email.slice(0,15) + "..." : email}</li>
+                                            <li className="!break-all max-w-full text-left list-inside">{email && email.length > 50 ? email.slice(0,40) + "..." : email}</li>
                                             <X color="red" onClick={() => removeEmail(email)} className="cursor-pointer" />
                                           </span>
                                         </TooltipTrigger>
@@ -225,13 +225,13 @@ const MailerForm = () => {
                             </div>
 
                             {/* Even-indexed emails for large screens */}
-                            <div className="md:w-1/2 w-full">
+                            <div className="md:w-1/2 w-full ">
                               {evenEmails.map((email, index) => (
-                                <TooltipProvider delayDuration={0} key={`odd-${email}-${index}`} >
+                                <TooltipProvider delayDuration={0} key={`even-${email}-${index}`} >
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <span className="flex justify-between text-sm text-black">
-                                      <li className="!break-all max-w-full text-left list-inside">{email && email.length > 20 ? email.slice(0,15) + "..." : email}</li>
+                                      <li className="!break-all max-w-full text-left list-inside">{email && email.length > 50 ? email.slice(0,40) + "..." : email}</li>
                                       <X color="red" onClick={() => removeEmail(email)} className="cursor-pointer" />
                                     </span>
                                   </TooltipTrigger>
@@ -356,10 +356,10 @@ const MailerForm = () => {
   return (
     <section className='relative'>
          <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} onKeyDown={handlePrematureFormSubmission} className="h-screen pt-20 justify-center items-center flex md:flex-nowrap flex-wrap md:pt-16 ">
+              <form onSubmit={form.handleSubmit(onSubmit)} onKeyDown={handlePrematureFormSubmission} className="lg:h-screen h-full pt-20 justify-center  items-center block lg:flex lg:flex-nowrap flex-wrap md:pt-16 ">
                 {/* <span onClick={() => setIsTourOpen(true)} className=' border bg-white shadow w-fit h-fit py-2 px-4 ml-2 cursor-pointer md:sticky top-24 md:block hidden'>Take Tour</span> */}
 
-                <div className='bg-white py-5 md:max-w-[36rem] !my-auto w-full mx-auto p-4 md:rounded-2xl md:!sticky h-fit top-28 md:flex-1'>
+                <div className='bg-white py-5 lg:max-w-[36rem] !my-auto w-full mx-auto p-4 md:rounded-2xl lg:!sticky h-fit top-28 lg:flex-1'>
                   
                     <FormField
                         control={form.control}
@@ -389,36 +389,39 @@ const MailerForm = () => {
                               <FormControl>
                                 <div className='w-full pr-5 flex items-center px-2 py-1 gap-2 flex-wrap overflow-auto no-scrollbar'>
                                     {renderEmails()}
-                                    <Input type="text" value={currentInput} placeholder="receiver@gmail.com" onKeyDown={handleKeyPress} ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailInput(e.target.value)}} className={`ring-offset-transparent flex-1 focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
-                                  {emailRegExp.test(currentInput) && (
-                                    <div
-                                      className="absolute top-full mt-1 bg-white border rounded-md shadow-md p-2 cursor-pointer flex items-center gap-2"
-                                      onClick={addEmail}
-                                    >
-                                      <Avatar>
-                                        <AvatarImage src="https://github.com/shadcn.png" />
-                                        <AvatarFallback>{currentInput.charAt(0).toLocaleUpperCase()}</AvatarFallback>
-                                      </Avatar>
-                                      <span className='!break-all max-w-full'>{currentInput}</span>
-                                    </div>
-                                  )}
-                                  <div className="flex justify-center w-fit items-center gap-2 pb-1 right-4 top-5" id="emails-toggle">
-                                      <div className="relative pr-2" >
-                                        <label htmlFor="file-input" className="cursor-pointer" >
-                                        <TooltipProvider delayDuration={0}>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <File size={18}/>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p>Add your .csv, .xlsx, .txt file and watch us filter valid emails.</p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
+                                    <div className='flex justify-between items-center w-full'>
+                                        <Input type="text" value={currentInput} placeholder="receiver@gmail.com" onKeyDown={handleKeyPress} ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailInput(e.target.value)}} className={`ring-offset-transparent flex-1 focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
+                                      {emailRegExp.test(currentInput) && (
+                                        <div
+                                          className="absolute top-full mt-1 bg-white border rounded-md shadow-md p-2 cursor-pointer flex items-center gap-2"
+                                          onClick={addEmail}
+                                        >
+                                          <Avatar>
+                                            <AvatarImage src="https://github.com/shadcn.png" />
+                                            <AvatarFallback>{currentInput.charAt(0).toLocaleUpperCase()}</AvatarFallback>
+                                          </Avatar>
+                                          <span className='!break-all max-w-full'>{currentInput}</span>
+                                        </div>
+                                      )}
+                                      <div className="flex justify-center w-fit items-center gap-2 pb-1 right-4 top-5" id="emails-toggle">
+                                          <div className="relative pr-2" >
+                                            <label htmlFor="file-input" className="cursor-pointer" >
+                                            <TooltipProvider delayDuration={0}>
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <File size={18}/>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  <p>Add your .csv, .xlsx, .txt file and watch us filter valid emails.</p>
+                                                </TooltipContent>
+                                              </Tooltip>
+                                            </TooltipProvider>
 
-                                        </label> 
-                                        <Input type="file" id="file-input" className="hidden" accept='.csv, .xlsx, .txt'  onChange={(e) => {handleEmailOnchangeArrayFile(e.target.files)}} />
+                                            </label> 
+                                            <Input type="file" id="file-input" className="hidden" accept='.csv, .xlsx, .txt'  onChange={(e) => {handleEmailOnchangeArrayFile(e.target.files)}} />
+                                          </div>
                                       </div>
+
                                     </div>
 
                                    
@@ -488,7 +491,7 @@ const MailerForm = () => {
                     )}
                   />
                 </div>
-                <div className='md:right-0 !pt-20 px-3 md:!w-80 w-full h-screen bg-white space-y-5 relative'>
+                <div className='lg:right-0 !pt-20 px-3 lg:!w-80 w-full lg:h-screen h-full lg:pb-0 pb-10 bg-white space-y-5 relative'>
                     <h2 className='text-lg pb-1 font-bold'>Configuration</h2>
                     <FormField
                         control={form.control}
@@ -628,7 +631,7 @@ const MailerForm = () => {
             <Dialog open={isSuccessfulMailModalOpen} onOpenChange={()=> setIsSuccessfulMailModalOpen(false)}>
                       <DialogTrigger>
                       </DialogTrigger>
-                      <DialogContent className='max-h-[40rem] max-w-[30rem] text-wrap overflow-y-auto overflow-x-hidden no-scrollbar'>
+                      <DialogContent className='max-h-[40rem] max-w-[50rem] text-wrap overflow-y-auto overflow-x-hidden no-scrollbar'>
                         <DialogHeader className='space-y-5 mt-10'>
                           <DialogTitle className='text-left text-sm flex justify-between items-center'>
                             <span>Total Accepted: <span className='rounded-full px-2 py-1 text-xs bg-green-500 text-white'>{emailsSent.reduce((acc, curr) => acc + curr.accepted.length, 0)}</span></span>
@@ -643,7 +646,7 @@ const MailerForm = () => {
                                       <TooltipProvider delayDuration={0} key={`accepted-${index}-${i}`} >
                                       <Tooltip>
                                         <TooltipTrigger asChild>
-                                          <li  className='break-all cursor-pointer'>{acceptedEmail && acceptedEmail.length > 20 ? acceptedEmail.slice(0,20) + "..." : acceptedEmail}</li>
+                                          <li  className='break-all cursor-pointer'>{acceptedEmail && acceptedEmail.length > 50 ? acceptedEmail.slice(0,40) + "..." : acceptedEmail}</li>
                                         </TooltipTrigger>
                                         <TooltipContent>
                                           <p>{acceptedEmail}</p>
@@ -661,7 +664,7 @@ const MailerForm = () => {
                                       <TooltipProvider delayDuration={0} key={`rejected-${index}-${i}`} >
                                       <Tooltip>
                                         <TooltipTrigger asChild>
-                                          <li className='break-all cursor-pointer'>{rejectedEmail && rejectedEmail.length > 20 ? rejectedEmail.slice(0,20) + "..." : rejectedEmail}</li>
+                                          <li className='break-all cursor-pointer'>{rejectedEmail && rejectedEmail.length > 50 ? rejectedEmail.slice(0,40) + "..." : rejectedEmail}</li>
                                         </TooltipTrigger>
                                         <TooltipContent>
                                           <p>{rejectedEmail}</p>
