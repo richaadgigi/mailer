@@ -57,6 +57,8 @@ const MailerForm = () => {
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const { toast } = useToast()
   const [acceptedEmails, setAcceptedEmails] = React.useState<Array<string> | undefined>([])
+  const oddEmails = acceptedEmails?.filter((_, index) => index % 2 === 0) || [];
+  const evenEmails = acceptedEmails?.filter((_, index) => index % 2 !== 0) || [];
   const [isTourOpen, setIsTourOpen] = React.useState(false);
   const [currentInput, setCurrentInput] = React.useState<string>("");
   const [isGoogleModalOpen, setIsGoogleModalOpen] = React.useState<boolean>(false);
@@ -201,16 +203,28 @@ const MailerForm = () => {
                       <DialogHeader className='space-y-5'>
                         <DialogTitle className='text-left text-2xl'><span className='border rounded-full mr-1 mb-2 px-4 py-2 text-sm xynder-bg-color text-white'>{acceptedEmails.length}</span>Accepted Emails</DialogTitle>
                         <hr className='py-1'/>
-                        <DialogDescription asChild className='space-y-2'>
-                          <ul style={{"listStyleType": "decimal"}}>
-                            {acceptedEmails && acceptedEmails.map((email, index) => (
-                              <span key={`${email}-${index}`} className='flex justify-between text-sm text-black '>
-                                <li className='!break-all max-w-full text-left list-inside'>{email}</li>
-                                <X color='red' onClick={()=>removeEmail(email)} className='cursor-pointer'/>
+                        <DialogDescription asChild className=''>
+                        <ul style={{ listStyleType: "decimal" }} className="block md:flex items-start gap-x-4">
+                          {/* Odd-indexed emails for large screens */}
+                          <div className="md:w-1/2 w-full">
+                            {oddEmails.map((email, index) => (
+                              <span key={`odd-${email}-${index}`} className="flex justify-between text-sm text-black">
+                                <li className="!break-all max-w-full text-left list-inside">{email}</li>
+                                <X color="red" onClick={() => removeEmail(email)} className="cursor-pointer" />
                               </span>
                             ))}
+                          </div>
 
-                          </ul>
+                          {/* Even-indexed emails for large screens */}
+                          <div className="md:w-1/2 w-full">
+                            {evenEmails.map((email, index) => (
+                              <span key={`even-${email}-${index}`} className="flex justify-between text-sm text-black">
+                                <li className="!break-all max-w-full text-left list-inside">{email}</li>
+                                <X color="red" onClick={() => removeEmail(email)} className="cursor-pointer" />
+                              </span>
+                            ))}
+                          </div>
+                        </ul>
                         </DialogDescription>
                       </DialogHeader>
                     </DialogContent>
@@ -611,7 +625,7 @@ const MailerForm = () => {
                                       <li key={`accepted-${index}-${i}`} className='break-all cursor-pointer' title={acceptedEmail}>{acceptedEmail && acceptedEmail.length > 20 ? acceptedEmail.slice(0,20) + "..." : acceptedEmail}</li>
 
                                     ))
-                                  ) as any[]}
+                                  ) }
 
                                 </ul>
                                 <ul   className='text-wrap basis-1/2 pl-3 space-y-2' style={{listStyle: "decimal"}}>
