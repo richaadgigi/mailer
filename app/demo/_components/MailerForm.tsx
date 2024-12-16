@@ -205,43 +205,71 @@ const MailerForm = () => {
                         <hr className='py-1'/>
                         <DialogDescription asChild className=''>
                           <ul style={{"listStyleType": "decimal"}} className='md:flex block gap-2'>
-                            {/* Odd-indexed emails for large screens */}
-                            <div className="md:w-1/2 w-full">
-                              {oddEmails.map((email, index) => (
-                                <TooltipProvider delayDuration={0} key={`odd-${email}-${index}`} >
+                            {/* Column for odd-indexed emails */}
+                              <div className="md:w-1/2 w-full md:block hidden">
+                                {acceptedEmails?.map((email, index) =>
+                                  index % 2 === 0 ? (
+                                    <TooltipProvider delayDuration={0} key={`${email}-${index}`} >
                                       <Tooltip>
                                         <TooltipTrigger asChild>
-                                          <span className="flex justify-between text-sm text-black">
-                                            <li className="!break-all max-w-full text-left list-inside">{email && email.length > 50 ? email.slice(0,40) + "..." : email}</li>
-                                            <X color="red" onClick={() => removeEmail(email)} className="cursor-pointer" />
-                                          </span>
+                                          <div className="flex justify-between text-sm text-black mb-2">
+                                            <li className="!break-all max-w-full text-left list-inside">{email}</li>
+                                            <X
+                                              color="red"
+                                              onClick={() => removeEmail(email)}
+                                              className="cursor-pointer"
+                                            />
+                                          </div>
+                                         
                                         </TooltipTrigger>
                                         <TooltipContent>
                                           <p>{email}</p>
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider>
-                              ))}
-                            </div>
+                                  ) : null
+                                )}
+                              </div>
 
-                            {/* Even-indexed emails for large screens */}
-                            <div className="md:w-1/2 w-full ">
-                              {evenEmails.map((email, index) => (
-                                <TooltipProvider delayDuration={0} key={`even-${email}-${index}`} >
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className="flex justify-between text-sm text-black">
-                                      <li className="!break-all max-w-full text-left list-inside">{email && email.length > 50 ? email.slice(0,40) + "..." : email}</li>
-                                      <X color="red" onClick={() => removeEmail(email)} className="cursor-pointer" />
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{email}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              ))}
-                            </div>   
+                              {/* Column for even-indexed emails */}
+                              <div className="md:w-1/2 w-full md:block hidden">
+                                {acceptedEmails?.map((email, index) =>
+                                  index % 2 !== 0 ? (
+                                    <TooltipProvider delayDuration={0} key={`${email}-${index}`} >
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="flex justify-between text-sm text-black mb-2">
+                                            <li className="!break-all max-w-full text-left list-inside">{email}</li>
+                                            <X
+                                              color="red"
+                                              onClick={() => removeEmail(email)}
+                                              className="cursor-pointer"
+                                            />
+                                          </div>
+                                         
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>{email}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  ) : null
+                                )}
+                              </div>
+                          {/* Column for small screens */}
+                          <div className='md:hidden block'>
+                          {acceptedEmails?.map((email, index) => (
+                                  <div key={`${email}-${index}`} className={`flex justify-between text-sm text-black mb-2 ${index % 2 !== 0 ? "bg-gray-200 py-2" : ""}`}>
+                                    <li className="!break-all max-w-full text-left list-inside">{email}</li>
+                                    <X
+                                      color="red"
+                                      onClick={() => removeEmail(email)}
+                                      className="cursor-pointer"
+                                    />
+                                  </div>
+                                ))}
+                          </div>
+                              
                           </ul>
                         </DialogDescription>
                       </DialogHeader>
