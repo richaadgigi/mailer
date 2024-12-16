@@ -375,7 +375,7 @@ const MailerForm = () => {
                                         <label htmlFor="file-input" className="cursor-pointer" >
                                         <TooltipProvider delayDuration={0}>
                                           <Tooltip>
-                                            <TooltipTrigger asChild className='delay-0'>
+                                            <TooltipTrigger asChild>
                                                 <File size={18}/>
                                             </TooltipTrigger>
                                             <TooltipContent>
