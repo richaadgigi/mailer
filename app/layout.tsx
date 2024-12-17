@@ -4,7 +4,15 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Nav from "@/components/globals/Nav";
 import {Head} from "next/document";
+import Clarity from "@microsoft/clarity";
+import ReactGA from "react-ga4";
 
+// Make sure to add your actual project id instead of "yourProjectId".
+const projectId = "pfk6jtbr19";
+
+Clarity.init(projectId);
+
+ReactGA.initialize("G-LREWL0CHFH");
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
