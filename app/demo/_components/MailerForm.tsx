@@ -415,9 +415,9 @@ const MailerForm = () => {
                               Recipients:
                             </FormLabel>
                               <FormControl>
-                                <div className='w-full pr-5 flex items-center px-2 py-1 gap-2 flex-wrap overflow-auto no-scrollbar'>
+                                <div className='w-full pr-5 flex lg:flex-nowrap items-center px-2 py-1 gap-2 flex-wrap overflow-auto no-scrollbar'>
                                     {renderEmails()}
-                                    <div className='flex justify-between items-center w-full'>
+                                    <div className='flex justify-between items-center w-full lg:flex-1'>
                                         <Input type="text" value={currentInput} placeholder="receiver@gmail.com" onKeyDown={handleKeyPress} ref={field.ref} onChange={(e) => {field.onChange(e.target.value), handleEmailInput(e.target.value)}} className={`ring-offset-transparent flex-1 focus-visible:!ring-offset-0 focus-visible:!ring-0 pl-0 !bg-white focus:!bg-white focus-within:!bg-white shadow-none border-0  rounded-none `}/>
                                       {emailRegExp.test(currentInput) && (
                                         <div
